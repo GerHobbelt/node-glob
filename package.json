@@ -1,11 +1,10 @@
 {
-  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
-  "name": "glob",
+  "name": "glob-papandreou",
   "description": "a little globber",
-  "version": "3.2.6",
+  "version": "3.2.6-patch1",
   "repository": {
     "type": "git",
-    "url": "git://github.com/isaacs/node-glob.git"
+    "url": "git://github.com/papandreou/node-glob.git"
   },
   "main": "glob.js",
   "engines": {
