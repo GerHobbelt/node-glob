@@ -137,6 +137,7 @@ function Glob (pattern, options, cb) {
   this.nosort = !!options.nosort
   this.nocase = !!options.nocase
   this.stat = !!options.stat
+  this.filter = options.filter;
 
   this.debug = !!options.debug || !!options.globDebug
   if (this.debug)
@@ -396,6 +397,10 @@ Glob.prototype._process = function (pattern, depth, index, cb_) {
       // this means that, whatever else comes after this, it can never match
       return cb()
     }
+
+    if (typeof this.filter === 'function') entries = entries.filter(function (entry) {
+      return this.filter(path.join(read, entry));
+    }, this);
 
     // globstar is special
     if (pattern[n] === minimatch.GLOBSTAR) {
