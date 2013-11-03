@@ -1,7 +1,7 @@
 {
   "name": "glob-papandreou",
   "description": "a little globber",
-  "version": "3.2.6-patch1",
+  "version": "3.2.6-patch2",
   "repository": {
     "type": "git",
     "url": "git://github.com/papandreou/node-glob.git"
