@@ -398,9 +398,9 @@ Glob.prototype._process = function (pattern, depth, index, cb_) {
       return cb()
     }
 
-    if (typeof this.filter === 'function') entries = entries.filter(function (entry) {
-      return this.filter(path.join(read, entry));
-    }, this);
+    if (this.filter) entries = entries.filter(function (e) {
+      return this.filter(getPath(e));
+    }, this)
 
     // globstar is special
     if (pattern[n] === minimatch.GLOBSTAR) {
@@ -451,6 +451,20 @@ Glob.prototype._process = function (pattern, depth, index, cb_) {
              e.match(pattern[n])
     })
 
+    function getPath(e) {
+      if (prefix) {
+        if (prefix !== "/") e = prefix + "/" + e
+        else e = prefix + e
+      }
+      if (e.charAt(0) === "/" && !this.nomount) {
+        e = path.join(this.root, e)
+      }
+
+      if (process.platform === "win32")
+      e = e.replace(/\\/g, "/")
+      return e;
+    }
+
     // If n === pattern.length - 1, then there's no need for the extra stat
     // *unless* the user has specified "mark" or "stat" explicitly.
     // We know that they exist, since the readdir returned them.
@@ -458,24 +472,13 @@ Glob.prototype._process = function (pattern, depth, index, cb_) {
         !this.mark &&
         !this.stat) {
       entries.forEach(function (e) {
-        if (prefix) {
-          if (prefix !== "/") e = prefix + "/" + e
-          else e = prefix + e
-        }
-        if (e.charAt(0) === "/" && !this.nomount) {
-          e = path.join(this.root, e)
-        }
-
-        if (process.platform === "win32")
-          e = e.replace(/\\/g, "/")
-
+        e = getPath(e)
         this.matches[index] = this.matches[index] || {}
         this.matches[index][e] = true
         this.emitMatch(e)
       }, this)
       return cb.call(this)
     }
-
 
     // now test all the remaining entries as stand-ins for that part
     // of the pattern.
