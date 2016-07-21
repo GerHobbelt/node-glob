@@ -1,11 +1,11 @@
 {
   "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
-  "name": "glob",
+  "name": "glob2",
   "description": "a little globber",
   "version": "7.0.5",
   "repository": {
     "type": "git",
-    "url": "git://github.com/isaacs/node-glob.git"
+    "url": "git://github.com/kaelzhang/node-glob.git"
   },
   "main": "glob.js",
   "files": [

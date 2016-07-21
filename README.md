@@ -1,11 +1,23 @@
-# Glob
+# glob2
 
 Match files using the patterns the shell uses, like stars and stuff.
 
-[![Build Status](https://travis-ci.org/isaacs/node-glob.svg?branch=master)](https://travis-ci.org/isaacs/node-glob/) [![Build Status](https://ci.appveyor.com/api/projects/status/kd7f3yftf7unxlsx?svg=true)](https://ci.appveyor.com/project/isaacs/node-glob) [![Coverage Status](https://coveralls.io/repos/isaacs/node-glob/badge.svg?branch=master&service=github)](https://coveralls.io/github/isaacs/node-glob?branch=master)
+[![Build Status](https://travis-ci.org/kaelzhang/node-glob.svg?branch=master)](https://travis-ci.org/kaelzhang/node-glob/) [![Build Status](https://ci.appveyor.com/api/projects/status/kd7f3yftf7unxlsx?svg=true)](https://ci.appveyor.com/project/kaelzhang/node-glob) [![Coverage Status](https://coveralls.io/repos/kaelzhang/node-glob/badge.svg?branch=master&service=github)](https://coveralls.io/github/kaelzhang/node-glob?branch=master)
 
 This is a glob implementation in JavaScript.  It uses the `minimatch`
 library to do its matching.
+
+A fork of [node-glob](https://npmjs.org/package/glob), the only difference with the origin package is that `glob2` supports `function`-type `options.ignore`
+
+```js
+glob2("**/*.js", {
+  ignore: function (path) {
+    return myIgnoreMethod(path)
+  }
+}, function (err, files) {
+  // err
+})
+```
 
 ![](oh-my-glob.gif)
 
@@ -18,7 +30,7 @@ npm i glob
 ```
 
 ```javascript
-var glob = require("glob")
+var glob = require("glob2")
 
 // options is optional
 glob("**/*.js", options, function (er, files) {
