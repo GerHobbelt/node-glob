@@ -4,6 +4,14 @@ require('./global-leakage.js')
 
 var glob = require('../glob.js')
 var test = require('tap').test
+var Ignore = require('ignore')
+
+function make (pattern) {
+  var filter = Ignore().add(pattern).createFilter()
+  return function (path) {
+    return !filter(path)
+  }
+}
 
 // [pattern, ignore, expect, opt (object) or cwd (string)]
 var cases = [
@@ -36,7 +44,12 @@ var cases = [
   [ 'a/**/b', ['a/x/**'], ['a/b', 'a/c/d/c/b', 'a/symlink/a/b']],
   [ 'a/**/b', ['a/x/**'], ['a/b', 'a/c/d/c/b', 'a/symlink/a/b', 'a/z/.y/b'], { dot: true }],
   [ '*/.abcdef', 'a/**', [] ],
-  [ 'a/*/.y/b', 'a/x/**', [ 'a/z/.y/b' ] ]
+  [ 'a/*/.y/b', 'a/x/**', [ 'a/z/.y/b' ] ],
+
+  // function-type options.ignore
+  [ '*/.abcdef', make('a/**'), [] ],
+  [ 'a/*/.y/b', make('a/x/**'), [ 'a/z/.y/b' ] ],
+  [ '**', ['abc{def,fed}/*', make('/abcdef')], ['abcfed', 'abcfed/g/h', 'b', 'b/c', 'b/c/d', 'bc', 'bc/e', 'bc/e/f', 'c', 'c/d', 'c/d/c', 'c/d/c/b', 'cb', 'cb/e', 'cb/e/f', 'symlink', 'symlink/a', 'symlink/a/b', 'symlink/a/b/c', 'x', 'z'], 'a']
 ]
 
 process.chdir(__dirname + '/fixtures')

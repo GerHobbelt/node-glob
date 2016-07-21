@@ -38,16 +38,36 @@ function setupIgnores (self, options) {
 
 // ignore patterns are always in dot:true mode.
 function ignoreMap (pattern) {
+  if (typeof pattern === 'function') {
+    return {
+      ignore: pattern,
+      ignoreChildren: pattern
+    }
+  }
+
   var gmatcher = null
   if (pattern.slice(-3) === '/**') {
     var gpattern = pattern.replace(/(\/\*\*)+$/, '')
     gmatcher = new Minimatch(gpattern, { dot: true })
   }
 
-  return {
-    matcher: new Minimatch(pattern, { dot: true }),
-    gmatcher: gmatcher
-  }
+  var matcher = new Minimatch(pattern, { dot: true })
+
+  return new IgnoreItem(matcher, gmatcher)
+}
+
+function IgnoreItem(matcher, gmatcher) {
+  this.matcher = matcher
+  this.gmatcher = gmatcher
+}
+
+IgnoreItem.prototype.ignore = function(path) {
+  return this.matcher.match(path)
+    || !!(this.gmatcher && this.gmatcher.match(path))
+}
+
+IgnoreItem.prototype.ignoreChildren = function (path) {
+  return !!(this.gmatcher && this.gmatcher.match(path))
 }
 
 function setopts (self, pattern, options) {
@@ -221,7 +241,7 @@ function isIgnored (self, path) {
     return false
 
   return self.ignore.some(function(item) {
-    return item.matcher.match(path) || !!(item.gmatcher && item.gmatcher.match(path))
+    return item.ignore(path)
   })
 }
 
@@ -230,6 +250,6 @@ function childrenIgnored (self, path) {
     return false
 
   return self.ignore.some(function(item) {
-    return !!(item.gmatcher && item.gmatcher.match(path))
+    return item.ignoreChildren(path)
   })
 }
