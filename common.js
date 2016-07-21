@@ -53,14 +53,21 @@ function ignoreMap (pattern) {
 
   var matcher = new Minimatch(pattern, { dot: true })
 
-  return {
-    ignore: function (path) {
-      return matcher.match(path) || !!(gmatcher && gmatcher.match(path))
-    },
-    ignoreChildren: function (path) {
-      return !!(gmatcher && gmatcher.match(path))
-    }
-  }
+  return new IgnoreItem(matcher, gmatcher)
+}
+
+function IgnoreItem(matcher, gmatcher) {
+  this.matcher = matcher
+  this.gmatcher = gmatcher
+}
+
+IgnoreItem.prototype.ignore = function(path) {
+  return this.matcher.match(path)
+    || !!(this.gmatcher && this.gmatcher.match(path))
+}
+
+IgnoreItem.prototype.ignoreChildren = function (path) {
+  return !!(this.gmatcher && this.gmatcher.match(path))
 }
 
 function setopts (self, pattern, options) {
