@@ -1,6 +1,6 @@
 {
   "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
-  "name": "glob",
+  "name": "@mapgrid/glob",
   "description": "a little globber",
   "version": "7.1.6",
   "repository": {
