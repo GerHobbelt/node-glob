@@ -7,7 +7,7 @@ Match files using the patterns the shell uses, like stars and stuff.
 This is a glob implementation in JavaScript.  It uses the `minimatch`
 library to do its matching.
 
-This is a *fork* of `glob`. It removes outdated fs/path polyfill.
+This is a *fork* of `glob`. It removes outdated fs/path polyfill, also returns a promise.
 
 ![](logo/glob.png)
 

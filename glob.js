@@ -66,7 +66,7 @@ const once = f => {
   }
 };
 
-function glob (pattern, options, cb) {
+async function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
   if (!options) options = {}
 
@@ -76,7 +76,17 @@ function glob (pattern, options, cb) {
     return globSync(pattern, options)
   }
 
-  return new Glob(pattern, options, cb)
+  return new Promise((resolve, reject) => {
+    new Glob(pattern, options, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(files);
+      }
+      // incase cb throw an error...
+      cb && cb(err, files);
+    });
+  });
 }
 
 glob.sync = globSync
