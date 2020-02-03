@@ -1,11 +1,14 @@
 {
-  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "author": "Jixun <jixun.moe+npm@gmail.com> (https://jixun.moe/)",
+  "contributors": [
+    "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)"
+  ],
   "name": "@jixun/glob",
   "description": "a little globber, without old polyfill",
-  "version": "7.1.6-patch6",
+  "version": "7.1.6-patch7",
   "repository": {
     "type": "git",
-    "url": "git://github.com/isaacs/node-glob.git"
+    "url": "git://github.com/JixunMoe/node-glob.git"
   },
   "main": "glob.js",
   "files": [
