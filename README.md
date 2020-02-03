@@ -1,11 +1,13 @@
-# Glob
+# `@jixun/glob`
 
 Match files using the patterns the shell uses, like stars and stuff.
 
-[![Build Status](https://travis-ci.org/isaacs/node-glob.svg?branch=master)](https://travis-ci.org/isaacs/node-glob/) [![Build Status](https://ci.appveyor.com/api/projects/status/kd7f3yftf7unxlsx?svg=true)](https://ci.appveyor.com/project/isaacs/node-glob) [![Coverage Status](https://coveralls.io/repos/isaacs/node-glob/badge.svg?branch=master&service=github)](https://coveralls.io/github/isaacs/node-glob?branch=master)
+[No Build Status] [No Coverage Status]
 
 This is a glob implementation in JavaScript.  It uses the `minimatch`
 library to do its matching.
+
+This is a *fork* of `glob`. It removes outdated fs/path polyfill.
 
 ![](logo/glob.png)
 
@@ -14,7 +16,7 @@ library to do its matching.
 Install with npm
 
 ```
-npm i glob
+npm i glob@npm:@jixun/glob
 ```
 
 ```javascript

@@ -2,14 +2,12 @@ module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = require('fs')
-var rp = require('fs.realpath')
 var minimatch = require('minimatch')
 var Minimatch = minimatch.Minimatch
 var Glob = require('./glob.js').Glob
 var util = require('util')
 var path = require('path')
 var assert = require('assert')
-var isAbsolute = require('path-is-absolute')
 var common = require('./common.js')
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
@@ -59,7 +57,7 @@ GlobSync.prototype._finish = function () {
       for (var p in matchset) {
         try {
           p = self._makeAbs(p)
-          var real = rp.realpathSync(p, self.realpathCache)
+          var real = fs.realpathSync(p)
           set[real] = true
         } catch (er) {
           if (er.syscall === 'stat')
@@ -112,8 +110,8 @@ GlobSync.prototype._process = function (pattern, index, inGlobStar) {
   var read
   if (prefix === null)
     read = '.'
-  else if (isAbsolute(prefix) || isAbsolute(pattern.join('/'))) {
-    if (!prefix || !isAbsolute(prefix))
+  else if (path.isAbsolute(prefix) || path.isAbsolute(pattern.join('/'))) {
+    if (!prefix || !path.isAbsolute(prefix))
       prefix = '/' + prefix
     read = prefix
   } else
@@ -396,7 +394,7 @@ GlobSync.prototype._processSimple = function (prefix, index) {
   if (!exists)
     return
 
-  if (prefix && isAbsolute(prefix) && !this.nomount) {
+  if (prefix && path.isAbsolute(prefix) && !this.nomount) {
     var trail = /[\/\\]$/.test(prefix)
     if (prefix.charAt(0) === '/') {
       prefix = path.join(this.root, prefix)
