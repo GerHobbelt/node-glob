@@ -14,7 +14,7 @@ function ownProp (obj, field) {
 
 var path = require("path")
 var minimatch = require("minimatch")
-var isAbsolute = require("path-is-absolute")
+var isAbsolute = path.isAbsolute;
 var Minimatch = minimatch.Minimatch
 
 function alphasorti (a, b) {

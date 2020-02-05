@@ -47,8 +47,8 @@ var inherits = require('util').inherits
 var EE = require('events').EventEmitter
 var path = require('path')
 var assert = require('assert')
-var globSync = require('./sync.js')
-var common = require('./common.js')
+var globSync = require('./sync')
+var common = require('./common')
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -66,7 +66,7 @@ const once = f => {
   }
 };
 
-async function glob (pattern, options, cb) {
+function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
   if (!options) options = {}
 
@@ -76,17 +76,7 @@ async function glob (pattern, options, cb) {
     return globSync(pattern, options)
   }
 
-  return new Promise((resolve, reject) => {
-    new Glob(pattern, options, (err, files) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(files);
-      }
-      // incase cb throw an error...
-      cb && cb(err, files);
-    });
-  });
+  return new Glob(pattern, options, cb);
 }
 
 glob.sync = globSync

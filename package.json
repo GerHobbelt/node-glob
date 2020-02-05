@@ -5,7 +5,7 @@
   ],
   "name": "@jixun/glob",
   "description": "a little globber, without old polyfill",
-  "version": "7.1.6-patch7",
+  "version": "7.1.6-patch8",
   "repository": {
     "type": "git",
     "url": "git://github.com/JixunMoe/node-glob.git"

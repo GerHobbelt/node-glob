@@ -7,7 +7,7 @@ Match files using the patterns the shell uses, like stars and stuff.
 This is a glob implementation in JavaScript.  It uses the `minimatch`
 library to do its matching.
 
-This is a *fork* of `glob` by [Isaac](http://blog.izs.me/). It removes outdated fs/path polyfill, also returns a promise.
+This is a *fork* of `glob` by [Isaac](http://blog.izs.me/). It removes outdated fs/path polyfill, also provides async version.
 
 ![](logo/glob.png)
 
@@ -21,6 +21,7 @@ npm i glob@npm:@jixun/glob
 
 ```javascript
 var glob = require("glob")
+var globAsync = require("glob/async");
 
 // options is optional
 glob("**/*.js", options, function (er, files) {
@@ -29,6 +30,11 @@ glob("**/*.js", options, function (er, files) {
   // was found, then files is ["**/*.js"]
   // er is an error object or null.
 })
+
+async function work() {
+  const results = await globAsync('src/**/*.js');
+  // do magic
+}
 ```
 
 ## Glob Primer
