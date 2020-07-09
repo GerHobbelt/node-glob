@@ -19,7 +19,7 @@ fs.lstat = function (path, cb) {
   // synthetically generate a non-ENOENT error
   if (badPaths.test(path)) {
     var er = new Error('synthetic')
-    er.code = 'EPERM'
+    er.code = 'EACCES'
     return process.nextTick(cb.bind(null, er))
   }
 
@@ -30,7 +30,7 @@ fs.lstatSync = function (path) {
   // synthetically generate a non-ENOENT error
   if (badPaths.test(path)) {
     var er = new Error('synthetic')
-    er.code = 'EPERM'
+    er.code = 'EACCES'
     throw er
   }
 
