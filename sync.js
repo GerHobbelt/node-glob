@@ -240,7 +240,6 @@ GlobSync.prototype._readdirInGlobStar = function (abs) {
 
   var entries
   var lstat
-  var stat
   try {
     lstat = fs.lstatSync(abs)
   } catch (er) {
@@ -264,8 +263,6 @@ GlobSync.prototype._readdirInGlobStar = function (abs) {
 }
 
 GlobSync.prototype._readdir = function (abs, inGlobStar) {
-  var entries
-
   if (inGlobStar && !ownProp(this.symlinks, abs))
     return this._readdirInGlobStar(abs)
 
@@ -433,7 +430,6 @@ GlobSync.prototype._stat = function (f) {
     // if we know it exists, but not what it is.
   }
 
-  var exists
   var stat = this.statCache[abs]
   if (!stat) {
     var lstat

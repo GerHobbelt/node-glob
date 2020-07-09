@@ -434,7 +434,6 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
   remain.shift()
   for (var i = 0; i < len; i ++) {
     var e = matchedEntries[i]
-    var newPattern
     if (prefix) {
       if (prefix !== '/')
         e = prefix + '/' + e
@@ -538,7 +537,6 @@ Glob.prototype._readdir = function (abs, inGlobStar, cb) {
       return cb(null, c)
   }
 
-  var self = this
   fs.readdir(abs, readdirCb(this, abs, cb))
 }
 
@@ -726,7 +724,6 @@ Glob.prototype._stat = function (f, cb) {
     // if we know it exists, but not what it is.
   }
 
-  var exists
   var stat = this.statCache[abs]
   if (stat !== undefined) {
     if (stat === false)
