@@ -14,7 +14,7 @@
     "common.js"
   ],
   "engines": {
-    "node": "*"
+    "node": ">=6"
   },
   "dependencies": {
     "@gerhobbelt/gitignore-parser": "^0.2.0-8",
@@ -22,8 +22,7 @@
     "inflight": "^1.0.6",
     "inherits": "2",
     "minimatch": "^3.0.4",
-    "once": "^1.4.0",
-    "path-is-absolute": "^2.0.0"
+    "once": "^1.4.0"
   },
   "devDependencies": {
     "mkdirp": "1",
