@@ -5,9 +5,17 @@ require('./global-leakage.js')
 var glob = require('../glob.js')
 var test = require('tap').test
 var path = require('path')
+var Ignore = require('ignore')
 
 function toAbsoluteFixtures(p) {
   return path.join(__dirname, 'fixtures', p)
+}
+
+function make(pattern) {
+  var filter = Ignore().add(pattern).createFilter()
+  return function (path) {
+    return !filter(path)
+  }
 }
 
 // [pattern, ignore, expect, opt (object) or cwd (string)]
@@ -46,7 +54,12 @@ var cases = [
   [ 'a/**', 'a/**', [] ],
   [ '../a/**', '**/a/**', [] , { cwd: 'a', dot: true}],
   // Absolute glob, relative ignore
-  [ toAbsoluteFixtures('a/*'), 'a/b', ['a/abcdef', 'a/abcfed', 'a/bc', 'a/c', 'a/cb', 'a/symlink', 'a/x', 'a/z'].map(toAbsoluteFixtures)]
+  [ toAbsoluteFixtures('a/*'), 'a/b', ['a/abcdef', 'a/abcfed', 'a/bc', 'a/c', 'a/cb', 'a/symlink', 'a/x', 'a/z'].map(toAbsoluteFixtures)],
+
+  // function-type options.ignore
+  [ '*/.abcdef', make('a/**'), [] ],
+  [ 'a/*/.y/b', make('a/x/**'), [ 'a/z/.y/b' ] ],
+  [ '**', ['abc{def,fed}/*', make('/abcdef')], ['abcfed', 'abcfed/g/h', 'b', 'b/c', 'b/c/d', 'bc', 'bc/e', 'bc/e/f', 'c', 'c/d', 'c/d/c', 'c/d/c/b', 'cb', 'cb/e', 'cb/e/f', 'symlink', 'symlink/a', 'symlink/a/b', 'symlink/a/b/c', 'x', 'z'], 'a']
 ]
 
 process.chdir(__dirname + '/fixtures')
