@@ -19,6 +19,18 @@ var path = require("path")
 var minimatch = require("@gerhobbelt/minimatch")
 var Minimatch = minimatch.Minimatch
 
+
+var pathToUnix;
+if (process.platform === 'win32') {
+  pathToUnix = function (p) {
+    return p.replace(/\\/g, '/');
+  }
+} else {
+  pathToUnix = function (p) {
+    return p;
+  }
+  
+
 function WinPath (p) {
   if (!(this instanceof WinPath))
     return new WinPath(p)
@@ -29,7 +41,7 @@ function WinPath (p) {
       /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/
   var result = splitDeviceRe.exec(p)
   this.device = result[1] || ''
-  this.sep = result[2] || ''
+  this.sep = result[2] || '/'
   this.tail = result[3] || ''
   this.isUnc = !!this.device && this.device.charAt(1) !== ':'
   this.isAbsolute = !!this.sep || this.isUnc // UNC paths are always absolute
@@ -44,20 +56,22 @@ function alphasort (a, b) {
 }
 
 function setupIgnores (self, options) {
-  var absolutePattern = (isAbsolutePosixPath(self.pattern) || path.isAbsolute(self.pattern));
+  var absolutePattern = path.isAbsolute(self.pattern);
   self.ignore = options.ignore || []
 
   if (!Array.isArray(self.ignore))
     self.ignore = [self.ignore]
 
   if (self.ignore.length) {
+    self.debug('ignore list before mapping:', { ignoreList: self.ignore, absolutePattern, allPathsAreUnixFormatted: self.allPathsAreUnixFormatted })
     self.ignore = self.ignore.map(function (ignorePattern) {
-      if (absolutePattern) {
+      if (absolutePattern && !self.allPathsAreUnixFormatted) {
         ignorePattern = makeAbs(self, ignorePattern)
       }
 
       return ignoreMap(self, ignorePattern)
     })
+    self.debug('ignore list after mapping:', { ignoreList: self.ignore })
   }
 }
 
@@ -72,7 +86,7 @@ function ignoreMap (self, pattern) {
   
   var matcher = new Minimatch(pattern, { dot: true, debug: self.debugMode })
   var gmatcher = null
-  // negative patters does not require for additional check
+  // negative pattern does not require for additional check
   if (!matcher.negate && pattern.slice(-3) === '/**') {
     var gpattern = pattern.replace(/(\/\*\*)+$/, '')
     gmatcher = new Minimatch(gpattern, { dot: true, debug: self.debugMode })
@@ -128,11 +142,14 @@ function setopts (self, pattern, options) {
   self.noprocess = !!options.noprocess
   self.absolute = !!options.absolute
   self.debugMode = options.debug
+  self.allPathsAreUnixFormatted = options.allPathsAreUnixFormatted
 
   self.maxLength = options.maxLength || Infinity
   self.cache = options.cache || Object.create(null)
   self.statCache = options.statCache || Object.create(null)
   self.symlinks = options.symlinks || Object.create(null)
+
+  if (self.debugMode) self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
 
   self.changedCwd = false
   var cwd = process.cwd()
@@ -146,24 +163,20 @@ function setopts (self, pattern, options) {
   if (process.platform === "win32") {
     var winPath = new WinPath(pattern)
     if (winPath.isAbsolute) {
-      options.root = winPath.device + '\\'
+      options.root = winPath.device + winPath.sep
       pattern = winPath.sep + winPath.tail
     }
   }
 
   self.root = options.root || path.resolve(self.cwd, "/")
   self.root = path.resolve(self.root)
-  if (process.platform === "win32")
-    self.root = self.root.replace(/\\/g, "/")
+  self.root = pathToUnix(self.root)
 
   // TODO: is an absolute `cwd` supposed to be resolved against `root`?
   // e.g. { cwd: '/test', root: __dirname } === path.join(__dirname, '/test')
   self.cwdAbs = path.isAbsolute(self.cwd) ? self.cwd : makeAbs(self, self.cwd)
-  if (process.platform === "win32")
-    self.cwdAbs = self.cwdAbs.replace(/\\/g, "/")
+  self.cwdAbs = pathToUnix(self.cwdAbs)
   self.nomount = !!options.nomount
-
-  if (self.debugMode) self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
 
   // disable comments and negation in Minimatch.
   // Note that they are not supported in Glob itself anyway.
@@ -260,22 +273,30 @@ function mark (self, p) {
 
 // lotta situps...
 function makeAbs (self, f) {
-  var abs = f
+  var abs
+  
   if (f.charAt(0) === '/') {
     abs = path.join(self.root, f)
+    self.debug('makeAbs ROOTED:', { before: f, root: self.root, after: abs })
+    abs = pathToUnix(abs);
   } else if (isWinDrive(f)) {
-    abs = f + '/'
+    abs = f + '/'                               // e.g. "C:/"
   } else if (path.isAbsolute(f) || f === '') {
     abs = f
+    if (!self.allPathsAreUnixFormatted) {
+      abs = pathToUnix(abs);
+    }
   } else if (self.changedCwd) {
     abs = path.resolve(self.cwd, f)
+    self.debug('makeAbs changedCWD:', { before: f, cwd: self.cwd, after: abs })
+    abs = pathToUnix(abs);
   } else {
     abs = path.resolve(f)
+    self.debug('makeAbs MISC:', { before: f, after: abs })
+    abs = pathToUnix(abs);
   }
 
-  if (process.platform === 'win32')
-    abs = abs.replace(/\\/g, '/')
-
+  self.debug('makeAbs -->', { inputPath: f, returnPath: abs })
   return abs
 }
 
@@ -302,8 +323,4 @@ function childrenIgnored (self, path) {
 
 function isWinDrive (path) {
   return process.platform === 'win32' && path.match(/^[a-z]+:$/i)
-}
-
-function isAbsolutePosixPath(path) {
-  return path.charAt(0) === '/';
 }

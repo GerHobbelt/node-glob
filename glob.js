@@ -51,9 +51,9 @@ var common = require('./common.js')
 var setopts = common.setopts
 var ownProp = common.ownProp
 var inflight = require('inflight')
+var util = require('util')
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
-var util = require('util')
 
 var once = require('once')
 
