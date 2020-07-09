@@ -7,7 +7,7 @@ var localRoot = path.resolve(__dirname, 'fixtures/a')
 var windowsRoot = localRoot
 
 function mockMinimatchForWin32() {
-  var minimatch = require('minimatch')
+  var minimatch = require('@gerhobbelt/minimatch')
   var OriginalMinimatch = minimatch.Minimatch
   minimatch.Minimatch = function Minimatch(pattern, options) {
     if (!(this instanceof Minimatch))

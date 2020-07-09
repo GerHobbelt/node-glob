@@ -42,7 +42,7 @@ module.exports = glob
 
 var fs = require('fs')
 var rp = require('fs.realpath')
-var minimatch = require('minimatch')
+var minimatch = require('@gerhobbelt/minimatch')
 var EE = require('events').EventEmitter
 var path = require('path')
 var assert = require('assert')
@@ -53,6 +53,7 @@ var ownProp = common.ownProp
 var inflight = require('inflight')
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
+var util = require('util')
 
 var once = require('once')
 
@@ -182,6 +183,8 @@ function Glob (pattern, options, cb) {
   }
 }
 
+Glob.prototype.debug = function () {}
+
 Glob.prototype._finish = function () {
   assert(this instanceof Glob)
   if (this.aborted)
@@ -305,7 +308,7 @@ Glob.prototype._process = function (pattern, index, inGlobStar, cb) {
     return
   }
 
-  //console.error('PROCESS %d', this._processing, pattern)
+  this.debug('PROCESS', { processing: this._processing, pattern, index, inGlobStar })
 
   // Get the first [n] parts of pattern that are all strings.
   var n = 0
@@ -397,7 +400,7 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
     }
   }
 
-  //console.error('prd2', prefix, entries, remain[0]._glob, matchedEntries)
+  this.debug('processReaddir2', { prefix, read, abs, remainGlob: remain[0]._glob, matchedEntries, index, entries, inGlobStar })
 
   var len = matchedEntries.length
   // If there are no matched entries, then nothing matches.
@@ -526,7 +529,7 @@ Glob.prototype._readdir = function (abs, inGlobStar, cb) {
   if (!cb)
     return
 
-  //console.error('RD %j %j', +inGlobStar, abs)
+  this.debug('readdir', { abs, inGlobStar })
   if (inGlobStar && !ownProp(this.symlinks, abs))
     return this._readdirInGlobStar(abs, cb)
 
@@ -625,7 +628,7 @@ Glob.prototype._processGlobStar = function (prefix, read, abs, remain, index, in
 
 
 Glob.prototype._processGlobStar2 = function (prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-  //console.error('pgs2', prefix, remain[0], entries)
+  this.debug('processGlobStar2', prefix, read, abs, remain, index, inGlobStar, entries )
 
   // no entries means not a dir, so it can never have matches
   // foo.txt/** doesn't match foo.txt
@@ -674,7 +677,7 @@ Glob.prototype._processSimple = function (prefix, index, cb) {
 }
 Glob.prototype._processSimple2 = function (prefix, index, er, exists, cb) {
 
-  //console.error('ps2', prefix, exists)
+  this.debug('processSimple2', {prefix, index, er, exists })
 
   if (!this.matches[index])
     this.matches[index] = Object.create(null)

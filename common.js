@@ -1,3 +1,5 @@
+var path = require('path')
+
 exports.alphasort = alphasort
 exports.alphasorti = alphasorti
 exports.setopts = setopts
@@ -14,7 +16,7 @@ function ownProp (obj, field) {
 }
 
 var path = require("path")
-var minimatch = require("minimatch")
+var minimatch = require("@gerhobbelt/minimatch")
 var Minimatch = minimatch.Minimatch
 
 function WinPath (p) {
@@ -42,7 +44,7 @@ function alphasort (a, b) {
 }
 
 function setupIgnores (self, options) {
-  var absolutePattern = (isAbsolute.posix(self.pattern) || isAbsolute(self.pattern));
+  var absolutePattern = (isAbsolutePosixPath(self.pattern) || path.isAbsolute(self.pattern));
   self.ignore = options.ignore || []
 
   if (!Array.isArray(self.ignore))
@@ -54,13 +56,13 @@ function setupIgnores (self, options) {
         ignorePattern = makeAbs(self, ignorePattern)
       }
 
-      return ignoreMap(ignorePattern)
+      return ignoreMap(self, ignorePattern)
     })
   }
 }
 
 // ignore patterns are always in dot:true mode.
-function ignoreMap (pattern) {
+function ignoreMap (self, pattern) {
   if (typeof pattern === 'function') {
     return {
       ignore: pattern,
@@ -68,12 +70,12 @@ function ignoreMap (pattern) {
     }
   }
   
-  var matcher = new Minimatch(pattern, { dot: true })
+  var matcher = new Minimatch(pattern, { dot: true, debug: self.debugMode })
   var gmatcher = null
   // negative patters does not require for additional check
   if (!matcher.negate && pattern.slice(-3) === '/**') {
     var gpattern = pattern.replace(/(\/\*\*)+$/, '')
-    gmatcher = new Minimatch(gpattern, { dot: true })
+    gmatcher = new Minimatch(gpattern, { dot: true, debug: self.debugMode })
   }
 
   return new IgnoreItem(matcher, gmatcher)
@@ -114,8 +116,9 @@ function setopts (self, pattern, options) {
   self.dot = !!options.dot
   self.mark = !!options.mark
   self.nodir = !!options.nodir
-  if (self.nodir)
+  if (self.nodir) {
     self.mark = true
+  }
   self.sync = !!options.sync
   self.nounique = !!options.nounique
   self.nonull = !!options.nonull
@@ -124,6 +127,7 @@ function setopts (self, pattern, options) {
   self.stat = !!options.stat
   self.noprocess = !!options.noprocess
   self.absolute = !!options.absolute
+  self.debugMode = options.debug
 
   self.maxLength = options.maxLength || Infinity
   self.cache = options.cache || Object.create(null)
@@ -158,6 +162,8 @@ function setopts (self, pattern, options) {
   if (process.platform === "win32")
     self.cwdAbs = self.cwdAbs.replace(/\\/g, "/")
   self.nomount = !!options.nomount
+
+  if (self.debugMode) self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
 
   // disable comments and negation in Minimatch.
   // Note that they are not supported in Glob itself anyway.
@@ -296,4 +302,8 @@ function childrenIgnored (self, path) {
 
 function isWinDrive (path) {
   return process.platform === 'win32' && path.match(/^[a-z]+:$/i)
+}
+
+function isAbsolutePosixPath(path) {
+  return path.charAt(0) === '/';
 }

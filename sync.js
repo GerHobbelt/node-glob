@@ -3,7 +3,7 @@ globSync.GlobSync = GlobSync
 
 var fs = require('fs')
 var rp = require('fs.realpath')
-var minimatch = require('minimatch')
+var minimatch = require('@gerhobbelt/minimatch')
 var path = require('path')
 var assert = require('assert')
 var common = require('./common.js')

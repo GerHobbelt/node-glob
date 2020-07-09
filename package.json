@@ -1,17 +1,12 @@
 {
-  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
   "name": "@GerHobbelt/glob",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
   "description": "a little globber",
   "version": "7.1.7-1",
   "repository": "GerHobbelt/node-glob",
   "main": "glob.js",
-  "files": [
-    "glob.js",
-    "sync.js",
-    "common.js"
-  ],
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "dependencies": {
     "@gerhobbelt/gitignore-parser": "0.2.0-8",
