@@ -307,6 +307,7 @@ GlobSync.prototype._readdirEntries = function (abs, entries) {
 GlobSync.prototype._readdirError = function (f, er) {
   // handle errors, and cache the information
   switch (er.code) {
+    case 'EACCES':  // ignore permission denied path
     case 'ENOTSUP': // https://github.com/isaacs/node-glob/issues/205
     case 'ENOTDIR': // totally normal. means it *does* exist.
       var abs = this._makeAbs(f)
