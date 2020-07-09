@@ -43,7 +43,6 @@ module.exports = glob
 var fs = require('fs')
 var rp = require('fs.realpath')
 var minimatch = require('minimatch')
-var inherits = require('inherits')
 var EE = require('events').EventEmitter
 var path = require('path')
 var assert = require('assert')
@@ -111,7 +110,7 @@ glob.hasMagic = function (pattern, options_) {
 }
 
 glob.Glob = Glob
-inherits(Glob, EE)
+util.inherits(Glob, EE)
 function Glob (pattern, options, cb) {
   if (typeof options === 'function') {
     cb = options

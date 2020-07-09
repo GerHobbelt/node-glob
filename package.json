@@ -20,7 +20,6 @@
     "@gerhobbelt/gitignore-parser": "0.2.0-8",
     "fs.realpath": "^1.0.0",
     "inflight": "^1.0.6",
-    "inherits": "2.0.0",
     "minimatch": "^3.0.4",
     "once": "^1.4.0"
   },
