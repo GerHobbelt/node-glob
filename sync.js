@@ -107,7 +107,7 @@ GlobSync.prototype._process = function (pattern, index, inGlobStar) {
   if (prefix === null)
     read = '.'
   else if (path.isAbsolute(prefix) || path.isAbsolute(pattern.join('/'))) {
-    if (!prefix || !path.isAbsolute(prefix))
+    if ((!prefix || !path.isAbsolute(prefix)) && !common.isWinDrive(prefix))
       prefix = '/' + prefix
     read = prefix
   } else
