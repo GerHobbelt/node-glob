@@ -37,7 +37,9 @@ var cases = [
   [ 'a/**/b', ['a/x/**'], ['a/b', 'a/c/d/c/b', 'a/symlink/a/b']],
   [ 'a/**/b', ['a/x/**'], ['a/b', 'a/c/d/c/b', 'a/symlink/a/b', 'a/z/.y/b'], { dot: true }],
   [ '*/.abcdef', 'a/**', [] ],
-  [ 'a/*/.y/b', 'a/x/**', [ 'a/z/.y/b' ] ]
+  [ 'a/*/.y/b', 'a/x/**', [ 'a/z/.y/b' ] ],
+  [ 'a/**', 'a/**', [] ],
+  [ '../a/**', '**/a/**', [] , { cwd: 'a', dot: true}]
 ]
 
 process.chdir(__dirname + '/fixtures')
