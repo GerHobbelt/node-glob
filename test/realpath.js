@@ -1,14 +1,15 @@
 var glob = require('../')
 var test = require('tap').test
+var path = require('path')
+
 // pattern to find a bunch of duplicates
 var pattern = 'a/symlink/{*,**/*/*/*,*/*/**,*/*/*/*/*/*}'
-var path = require('path')
 
 var fixtureDir = path.resolve(path.join(__dirname, 'fixtures'))
 process.chdir(fixtureDir)
 
-if (process.platform === 'win32')
-  return require('tap').plan(0, 'skip on windows')
+// if (process.platform === 'win32')
+//   return require('tap').plan(0, 'skip on windows')
 
 // options, results
 // realpath:true set on each option
@@ -80,14 +81,17 @@ cases.forEach(function (c) {
 
   opt.realpath = true
 
-  test(JSON.stringify(opt), function (t) {
-    opt.realpath = true
+  test("sync:" + JSON.stringify(opt), function (t) {
     var sync = glob.sync(p, opt)
-    t.same(sync, expect, 'sync')
+    t.same(sync.map((p) => p.replace(/\\/g, '/')), expect, 'sync')
+    t.end()
+  })
+
+  test(JSON.stringify(opt), function (t) {
     glob(p, opt, function (er, async) {
       if (er)
         throw er
-      t.same(async, expect, 'async')
+      t.same(async.map((p) => p.replace(/\\/g, '/')), expect, 'async')
       t.end()
     })
   })
