@@ -91,6 +91,10 @@
     "./a/symlink",
     "./a/x",
     "./a/z",
+    "./edge/!(case)",
+    "./edge/!case",
+    "./edge/(case)",
+    "./edge/case",
     "/tmp/glob-test/asdf",
     "/tmp/glob-test/bar",
     "/tmp/glob-test/baz",
@@ -107,7 +111,8 @@
     "/tmp/glob-test/quux",
     "/tmp/glob-test/qwer",
     "/tmp/glob-test/rewq",
-    "a"
+    "a",
+    "edge"
   ],
   "a/!(symlink)/**": [
     "a/abcdef",

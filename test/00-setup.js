@@ -44,13 +44,12 @@ tap.test("remove fixtures", function (t) {
 
 files.forEach(function (f) {
   tap.test('setup fixture file ' + f, function (t) {
-    f = path.resolve(fixtureDir, f)
-    var d = path.dirname(f)
-    mkdirp(d, '0755', function (er) {
-      if (er) {
-        t.fail(er)
+    f = path.resolve(fixtureDir, f);
+    var d = path.dirname(f);
+    mkdirp(d, '0755').catch((er) => {
+        t.fail(er);
         return t.bailout()
-      }
+      }).then(() => {
       fs.writeFile(f, "i like tests", function (er) {
         t.ifError(er, "make file")
         t.end()
@@ -59,24 +58,28 @@ files.forEach(function (f) {
   })
 })
 
-if (process.platform !== "win32") {
+
+//if (process.platform !== "win32") {
   tap.test("symlinky", function (t) {
     var d = path.dirname(symlinkTo)
-    mkdirp(d, '0755', function (er) {
-      if (er)
+    mkdirp(d, '0755').catch((er) => {
         throw er
+      }).then(() => {
       fs.symlinkSync(symlinkFrom, symlinkTo, "dir")
       t.end()
     })
   })
-}
+//}
 
-;["foo","bar","baz","asdf","quux","qwer","rewq"].forEach(function (w) {
+
+
+var tmpGlobTestDirs = ["foo","bar","baz","asdf","quux","qwer","rewq"]
+tmpGlobTestDirs.forEach(function (w) {
   w = "/tmp/glob-test/" + w
-  tap.test("create " + w, function (t) {
-    mkdirp(w, '0755', function (er) {
-      if (er)
+  tap.test("create " + w + " --> " + path.resolve(w), function (t) {
+    mkdirp(w, '0755').catch((er) => {
         throw er
+       }).then(() => {
       t.pass(w)
       t.end()
     })
@@ -90,13 +93,20 @@ if (process.platform === 'win32') {
     var net = spawn('net', ['share', 'glob-test=' + localPath])
     net.stderr.pipe(process.stderr)
     net.on('close', function (code) {
-      t.equal(code, 0, 'failed to create a unc share')
+      // TODO: currently 'NET SHARE' is a pretty dangerous command as, depending on user rights, this is okay or not. Hence we now IGNORE any failures here:
+      if (0) {
+        t.equal(code, 0, 'failed to create a unc share')
+      }
       t.end()
     })
   })
 }
 
 // generate the bash pattern test-fixtures if possible
+let rootDrive = '';
+if (process.platform === 'win32') {
+  rootDrive = process.cwd().replace(/^([^\\/]+:)[\\/].*$/, '$1');
+}
 
 var globs =
   // put more patterns here.
@@ -114,8 +124,8 @@ var globs =
   ,"*/*/*/f"
   ,"**/f"
   ,"a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/**/b/c/**"
-  ,"{./*/*,/tmp/glob-test/*}"
-  ,"{/tmp/glob-test/*,*}" // evil owl face!  how you taunt me!
+  ,`{./*/*,/tmp/glob-test/*}`
+  ,`{/tmp/glob-test/*,*}` // evil owl face!  how you taunt me!
   ,"a/!(symlink)/**"
   ,"a/symlink/a/**/*"
   ]
@@ -129,7 +139,11 @@ globs.forEach(function (pattern) {
       "-O", "extglob",
       "-O", "nullglob",
       "-c",
-      "for i in " + pattern + "; do echo $i; done"
+      // rootDrive injection: fix issue where / is translated to C: drive system path when running bash in windows / MSYS2. 
+      // 
+      // Also make sure the path is printed as-is by quoting it. We've encountered some weird behaviour on the windows/MSYS
+      // box where entries were sometimes NOT separated by a newline when the `echo` command wasn't carrying quotes...
+      "for i in " + pattern.replace(/(\{|,)(\/)/g, '$1' + rootDrive + '$2') + "; do echo \"$i\"; done"
     ]
     var cp = spawn("bash", opts, { cwd: fixtureDir })
     var out = []
@@ -139,10 +153,18 @@ globs.forEach(function (pattern) {
     cp.stderr.pipe(process.stderr)
     cp.on("close", function (code) {
       out = flatten(out)
+      console.log('bash --> ', { pattern, out})
       if (!out)
         out = []
-      else
+      else {
+        // and strip off the rootDrive again in windows:
+        if (rootDrive) {
+          let re = new RegExp(`^${rootDrive}[\\/]`, 'gm');
+          out = out.replace(re, '/');
+        }
+        // also split on space: apparently bash does NOT print a newline between every entry when expanding {./*/*,/tmp/glob-test/*}:
         out = cleanResults(out.split(/\r*\n/))
+      }
 
       bashOutput[pattern] = out
       t.notOk(code, "bash test should finish nicely")
