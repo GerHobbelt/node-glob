@@ -10,6 +10,8 @@ var fs = require("fs")
 var rimraf = require("rimraf")
 var spawn = require('child_process').spawn
 
+//tap.debug = console.error
+
 var fixtureDir = path.resolve(__dirname, 'fixtures')
 
 var files =
@@ -22,6 +24,10 @@ var files =
 , "a/cb/e/f"
 , "a/x/.y/b"
 , "a/z/.y/b"
+, "edge/!(case)"
+, "edge/!case"
+, "edge/(case)"
+, "edge/case"
 ]
 
 var symlinkTo = path.resolve(fixtureDir, "a/symlink/a/b/c")
@@ -37,7 +43,7 @@ tap.test("remove fixtures", function (t) {
 })
 
 files.forEach(function (f) {
-  tap.test(f, function (t) {
+  tap.test('setup fixture file ' + f, function (t) {
     f = path.resolve(fixtureDir, f)
     var d = path.dirname(f)
     mkdirp(d, '0755', function (er) {
@@ -68,7 +74,7 @@ if (process.platform !== "win32") {
 ;["foo","bar","baz","asdf","quux","qwer","rewq"].forEach(function (w) {
   w = "/tmp/glob-test/" + w
   tap.test("create " + w, function (t) {
-    mkdirp(w, function (er) {
+    mkdirp(w, '0755', function (er) {
       if (er)
         throw er
       t.pass(w)
@@ -91,10 +97,6 @@ if (process.platform === 'win32') {
 }
 
 // generate the bash pattern test-fixtures if possible
-if (process.platform === "win32" || !process.env.TEST_REGEN) {
-  console.error("Windows, or TEST_REGEN unset.  Using cached fixtures.")
-  return
-}
 
 var globs =
   // put more patterns here.

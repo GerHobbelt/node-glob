@@ -23,3 +23,10 @@ tap.test("cleanup fixtures", function (t) {
     t.end()
   })
 })
+
+tap.test("cleanup /tmp/glob-test/ fixtures", function (t) {
+  rimraf("/tmp/glob-test/", function (er) {
+    t.ifError(er, "removed")
+    t.end()
+  })
+})

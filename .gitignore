@@ -154,3 +154,5 @@ typings/
 #!.vscode/extensions.json
 .vscode
 
+# test fixtures are auto-generated 
+/test/fixtures/
