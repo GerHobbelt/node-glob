@@ -115,7 +115,7 @@ GlobSync.prototype._process = function (pattern, index, inGlobStar) {
 
   var abs = this._makeAbs(read)
 
-  //if ignored, skip processing
+  // if ignored, skip processing
   if (childrenIgnored(this, read))
     return
 
@@ -207,7 +207,7 @@ GlobSync.prototype._emitMatch = function (index, e) {
   if (isIgnored(this, e))
     return
 
-  var abs = this._makeAbs(e)
+  var abs = path.isAbsolute(e) ? e : this._makeAbs(e)
 
   if (this.mark)
     e = this._mark(e)

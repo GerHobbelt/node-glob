@@ -58,12 +58,19 @@ var isIgnored = common.isIgnored
 var once = require('once')
 
 function glob (pattern, options, cb) {
-  if (typeof options === 'function') cb = options, options = {}
-  if (!options) options = {}
+  if (typeof options === 'function') {
+    cb = options
+    options = {}
+  }
+  if (!options) {
+    options = {}
+  }
 
   if (options.sync) {
-    if (cb)
-      throw new TypeError('callback provided to sync glob')
+    if (cb) {
+      throw new TypeError('callback provided to sync glob\n'+
+                          'See: https://github.com/isaacs/node-glob/issues/167')
+    }
     return globSync(pattern, options)
   }
 
@@ -122,13 +129,16 @@ function Glob (pattern, options, cb) {
   }
 
   if (options && options.sync) {
-    if (cb)
-      throw new TypeError('callback provided to sync glob')
+    if (cb) {
+      throw new TypeError('callback provided to sync glob\n'+
+                          'See: https://github.com/isaacs/node-glob/issues/167')
+    }
     return new GlobSync(pattern, options)
   }
 
-  if (!(this instanceof Glob))
+  if (!(this instanceof Glob)) {
     return new Glob(pattern, options, cb)
+  }
 
   setopts(this, pattern, options)
   this._didRealPath = false
@@ -317,7 +327,7 @@ Glob.prototype._process = function (pattern, index, inGlobStar, cb) {
   }
   // now n is the index of the first one that is *not* a string.
 
-  // see if there's anything else
+  // See if there's anything else
   var prefix
   switch (n) {
     // if not, then this is rather simple
@@ -354,7 +364,7 @@ Glob.prototype._process = function (pattern, index, inGlobStar, cb) {
 
   var abs = this._makeAbs(read)
 
-  //if ignored, skip _processing
+  // if ignored, skip processing
   if (childrenIgnored(this, read))
     return cb()
 
@@ -419,7 +429,7 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
     for (var i = 0; i < len; i ++) {
       var e = matchedEntries[i]
       if (prefix) {
-        if (prefix !== '/')
+        if (prefix.slice(-1) !== '/')
           e = prefix + '/' + e
         else
           e = prefix + e
@@ -440,7 +450,7 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
   for (var i = 0; i < len; i ++) {
     var e = matchedEntries[i]
     if (prefix) {
-      if (prefix !== '/')
+      if (prefix.slice(-1) !== '/')
         e = prefix + '/' + e
       else
         e = prefix + e
@@ -467,8 +477,9 @@ Glob.prototype._emitMatch = function (index, e) {
   if (this.mark)
     e = this._mark(e)
 
-  if (this.absolute)
+  if (this.absolute) {
     e = abs
+  }
 
   if (this.matches[index][e])
     return
@@ -505,8 +516,10 @@ Glob.prototype._readdirInGlobStar = function (abs, cb) {
     fs.lstat(abs, lstatcb)
 
   function lstatcb_ (er, lstat) {
-    if (er && (er.code === 'ENOENT' || er.code === 'EPERM'))
+    if (er && (er.code === 'ENOENT' || er.code === 'EPERM')) {
+      // lstat failed, doesn't exist
       return cb()
+    }
 
     var isSym = lstat && lstat.isSymbolicLink()
     self.symlinks[abs] = isSym
@@ -580,10 +593,12 @@ Glob.prototype._readdirError = function (f, er, cb) {
   if (this.aborted)
     return
 
+  this.debug('_readdirError:', { f, er })
   // handle errors, and cache the information
   switch (er.code) {
     case 'ENOTSUP': // https://github.com/isaacs/node-glob/issues/205
     case 'ENOTDIR': // totally normal. means it *does* exist.
+    case 'EBUSY':
       var abs = this._makeAbs(f)
       this.cache[abs] = 'FILE'
       if (abs === this.cwdAbs) {
@@ -595,6 +610,7 @@ Glob.prototype._readdirError = function (f, er, cb) {
       }
       break
 
+    case 'EACCES': // ignore permission denied path
     case 'ENOENT': // not terribly unusual
     case 'EPERM':
     case 'ELOOP':
@@ -675,8 +691,8 @@ Glob.prototype._processSimple = function (prefix, index, cb) {
     self._processSimple2(prefix, index, er, exists, cb)
   })
 }
-Glob.prototype._processSimple2 = function (prefix, index, er, exists, cb) {
 
+Glob.prototype._processSimple2 = function (prefix, index, er, exists, cb) {
   this.debug('processSimple2', {prefix, index, er, exists })
 
   if (!this.matches[index])
@@ -749,11 +765,12 @@ Glob.prototype._stat = function (f, cb) {
     fs.lstat(abs, statcb)
 
   function lstatcb_ (er, lstat) {
+    self.debug('lstat cb:', { er })
     if (lstat && lstat.isSymbolicLink()) {
       // If it's a symlink, then treat it as the target, unless
       // the target does not exist, then treat it as a file.
-      return fs.stat(abs, function (er, stat) {
-        if (er)
+      return fs.stat(abs, function (er2, stat) {
+        if (er2)
           self._stat2(f, abs, null, lstat, cb)
         else
           self._stat2(f, abs, er, stat, cb)
@@ -765,6 +782,7 @@ Glob.prototype._stat = function (f, cb) {
 }
 
 Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
+  this.debug('_stat2 cb:', { f, abs, er })
   if (er && (er.code === 'ENOENT' || er.code === 'EPERM' || er.code === 'ENOTDIR')) {
     this.statCache[abs] = false
     return cb()
