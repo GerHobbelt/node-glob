@@ -86,21 +86,25 @@ tmpGlobTestDirs.forEach(function (w) {
   })
 })
 
-// share 'a' via unc path \\<hostname>\glob-test
-if (process.platform === 'win32') {
-  tap.test('create unc-accessible share', function (t) {
-    var localPath = path.resolve(__dirname, 'fixtures/a')
-    var net = spawn('net', ['share', 'glob-test=' + localPath])
-    net.stderr.pipe(process.stderr)
-    net.on('close', function (code) {
-      // TODO: currently 'NET SHARE' is a pretty dangerous command as, depending on user rights, this is okay or not. Hence we now IGNORE any failures here:
-      if (0) {
-        t.equal(code, 0, 'failed to create a unc share')
-      }
-      t.end()
+// see git commit SHA-1: 3fcb58477cabfc259685bba12daff9c358ab181c: not creating a net share any more, using implicit shares in the tests instead.
+if (0) {
+  // share 'a' via unc path \\<hostname>\glob-test
+  if (process.platform === 'win32') {
+    tap.test('create unc-accessible share', function (t) {
+      var localPath = path.resolve(__dirname, 'fixtures/a')
+      var net = spawn('net', ['share', 'glob-test=' + localPath])
+      net.stderr.pipe(process.stderr)
+      net.on('close', function (code) {
+        // TODO: currently 'NET SHARE' is a pretty dangerous command as, depending on user rights, this is okay or not. Hence we now IGNORE any failures here:
+        if (0) {
+          t.equal(code, 0, 'failed to create a unc share')
+        }
+        t.end()
+      })
     })
-  })
+  }
 }
+
 
 // generate the bash pattern test-fixtures if possible
 let rootDrive = '';
