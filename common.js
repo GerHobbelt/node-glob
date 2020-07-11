@@ -41,7 +41,7 @@ function WinPath (p) {
       /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/
   var result = splitDeviceRe.exec(p)
   this.device = result[1] || ''
-  this.sep = result[2] || '/'
+  this.sep = result[2] || ''
   this.tail = result[3] || ''
   this.isUnc = !!this.device && this.device.charAt(1) !== ':'
   this.isAbsolute = !!this.sep || this.isUnc // UNC paths are always absolute
@@ -113,6 +113,15 @@ function setopts (self, pattern, options) {
   if (!options)
     options = {}
 
+  self.debugMode = options.debug
+  if (self.debugMode) {
+    self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
+  } else {
+    self.debug = () => {}
+  }
+
+  self.debug('glob.common input args:', { pattern, options })
+
   // base-matching: just use globstar for that.
   if (options.matchBase && -1 === pattern.indexOf("/")) {
     if (options.noglobstar) {
@@ -141,7 +150,6 @@ function setopts (self, pattern, options) {
   self.stat = !!options.stat
   self.noprocess = !!options.noprocess
   self.absolute = !!options.absolute
-  self.debugMode = options.debug
   self.allPathsAreUnixFormatted = options.allPathsAreUnixFormatted
 
   self.maxLength = options.maxLength || Infinity
@@ -149,31 +157,28 @@ function setopts (self, pattern, options) {
   self.statCache = options.statCache || Object.create(null)
   self.symlinks = options.symlinks || Object.create(null)
 
-  if (self.debugMode) {
-    self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
-  } else {
-    self.debug = () => {}
-  }
-
   self.changedCwd = false
   var cwd = process.cwd()
   if (!ownProp(options, "cwd"))
     self.cwd = cwd
   else {
-    self.cwd = path.resolve(options.cwd)
+    self.cwd = pathToUnix(path.resolve(options.cwd))
     self.changedCwd = self.cwd !== cwd
   }
 
+  self.root = options.root
   if (process.platform === "win32") {
     var winPath = new WinPath(pattern)
     if (winPath.isAbsolute) {
-      options.root = winPath.device + winPath.sep
+      // only override the root when the pattern did include an actual **drive letter**!
+      if (winPath.device) {
+        self.root = winPath.device + winPath.sep
+      }
       pattern = winPath.sep + winPath.tail
     }
   }
 
-  self.root = options.root || path.resolve(self.cwd, "/")
-  self.root = path.resolve(self.root)
+  self.root = path.resolve(self.root || "/")
   self.root = pathToUnix(self.root)
 
   // TODO: is an absolute `cwd` supposed to be resolved against `root`?
