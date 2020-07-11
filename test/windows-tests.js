@@ -3,7 +3,11 @@ var path = require('path')
 var os = require('os')
 
 var uncRoot = '\\\\' + os.hostname() + '\\glob-test'
-var localRoot = path.resolve(__dirname, 'fixtures/a')
+uncRoot = ('\\\\' + os.hostname() + '\\' + path.join(__dirname, 'fixtures/a').replace(/^([^\\/]+):([\\/].*)$/, '$1$$$2')).replace(/\\/g, '/');
+console.error('########################### unc path', uncRoot)
+
+
+var localRoot = path.resolve(__dirname, 'fixtures/a').replace(/\\/g, '/')
 var windowsRoot = localRoot
 
 function mockMinimatchForWin32() {
@@ -31,11 +35,13 @@ function mockResolveForWin32() {
   var originalResolve = path.resolve
   path.resolve = function() {
     var args = arguments
-    if (args[0].indexOf(uncRoot) === 0) {
-      args[0] = args[0].replace(uncRoot, localRoot).replace(/\\/g, '/')
-    } else if (args[0].indexOf('C:\\') === 0) {
-      args[0] = args[0].replace('C:\\', '/').replace(/\\/g, '/')
+    var p = args[0].replace(/\\/g, '/')
+    if (p.indexOf(uncRoot) === 0) {
+      p = p.replace(uncRoot, localRoot)
+    } else if (p.indexOf('C:/') === 0) {
+      p = p.replace('C:/', '/')
     }
+    args[0] = p;
     return originalResolve.apply(path, args)
   }
 }
@@ -44,9 +50,9 @@ function mockProcessPlatformForWin32() {
   Object.defineProperty(process, 'platform', { value: 'win32' })
 }
 
-var mockingWin32 = process.platform !== 'win32'
+var mockingWin32 = (process.platform !== 'win32')
 if (mockingWin32) {
-  windowsRoot = 'C:' + localRoot.replace(/\//g, '\\')
+  windowsRoot = 'C:' + localRoot
   mockMinimatchForWin32()
   mockResolveForWin32()
 }
@@ -56,22 +62,24 @@ if (mockingWin32) {
 }
 
 test('glob doesn\'t choke on UNC paths', function(t) {
-  var expect = [uncRoot + '\\c', uncRoot + '\\cb']
+  var expect = [uncRoot + '/c', uncRoot + '/cb']
 
-  var results = glob(uncRoot + '\\c*', function (er, results) {
+  var results = glob(uncRoot + '/c*', { debug: false }, function (er, results) {
     if (er)
       throw er
 
-    var uncResults = results.map(function (result) { return result.replace(localRoot, uncRoot).replace(/\//g, '\\') })
+    var uncResults = results.map(function (result) { 
+      return result.replace(/\\/g, '/').replace(localRoot, uncRoot) 
+    })
     t.same(uncResults, expect)
     t.end()
   })
 })
 
 test('can match abs paths on Windows with nocase', function(t) {
-  var testPath = path.resolve(__dirname, "fixtures/a/b/c/d")
-  glob(windowsRoot + '\\**\\b\\c\\d', {nocase: true}, function (err, match) {
-    t.same(match, [testPath])
+  var testPath = path.resolve(__dirname, "fixtures/a/b/c/d").replace(/\\/g, '/')
+  glob(windowsRoot + '/**/b/c/d', {nocase: true, debug: false}, function (err, match) {
+    t.same(match.map((el) => el.replace(/\\/g, '/')), [testPath])
     t.end()
   })
 })
