@@ -1,38 +1,63 @@
-# Glob
+# @gerhobbelt/glob
 
 Match files using the patterns the shell uses, like stars and stuff.
 
-[![Build Status](https://travis-ci.org/kaelzhang/node-glob.svg?branch=master)](https://travis-ci.org/kaelzhang/node-glob/) [![Build Status](https://ci.appveyor.com/api/projects/status/kd7f3yftf7unxlsx?svg=true)](https://ci.appveyor.com/project/kaelzhang/node-glob) [![Coverage Status](https://coveralls.io/repos/kaelzhang/node-glob/badge.svg?branch=master&service=github)](https://coveralls.io/github/kaelzhang/node-glob?branch=master)
+[![Build Status](https://travis-ci.org/GerHobbelt/node-glob.svg?branch=master)](https://travis-ci.org/GerHobbelt/node-glob/) [![Build Status](https://ci.appveyor.com/api/projects/status/kd7f3yftf7unxlsx?svg=true)](https://ci.appveyor.com/project/isaacs/node-glob) [![Coverage Status](https://coveralls.io/repos/isaacs/node-glob/badge.svg?branch=master&service=github)](https://coveralls.io/github/isaacs/node-glob?branch=master)
 
 This is a glob implementation in JavaScript.  It uses the `minimatch`
 library to do its matching.
 
-A fork of [node-glob](https://npmjs.org/package/glob), the only difference with the origin package is that `glob` now supports `function`-type `options.ignore`
+> # This is a *fork* of the [`glob` npm package a.k.a. `node-glob`](https://npmjs.org/package/glob)
+>
+> ![](logo/glob.png)
 
-```js
-glob("**/*.js", {
-  ignore: function (path) {
-    return myIgnoreMethod(path)
-  }
-}, function (err, files) {
-  // err
-})
-```
 
-This is a *fork* of `glob`. It removes outdated fs/path polyfill.
+## Features of this fork
 
-![](logo/glob.png)
+- It removes outdated fs/path polyfill.
+
+- supports `function`-type `options.ignore`
+
+  ```js
+  glob("**/*.js", {
+    ignore: function (path) {
+      return myIgnoreMethod(path)
+    }
+  }, function (err, files) {
+    // err
+  })
+  ```
+
+- supports `options.nocase` on Windows 
+
+  (The original `glob` would not deliver *any* results when you turn that option on.)
+  
+- supports `options.debug` as both a boolean flag or a user-defined *function* 
+
+  The debug function interface should mimic `console.error`, which is the default debug function when you set `options.debug = true`.
+
+- `options.allPathsAreUnixFormatted`
+
+- now copes much better with EBUSY, EPERM and EACCES file system errors, which would cause the original `glob` to fail dramatically. 
+
+  This fork handles these errors more like warnings: the entries will be listed and no exception will be thrown for them.
+  
+- several fixes to path processing in pattern matching.
+
+  
+  
+
 
 ## Usage
 
 Install with npm
 
 ```
-npm i glob@npm:@jixun/glob
+npm i @gerhobbelt/glob
 ```
 
 ```javascript
-var glob = require("glob2")
+var glob = require("@gerhobbelt/glob")
 
 // options is optional
 glob("**/*.js", options, function (er, files) {
@@ -364,6 +389,7 @@ filesystem state in the face of rapid changes.  For the vast majority
 of operations, this is never a problem.
 
 ## Glob Logo
+
 Glob's logo was created by [Tanya Brassie](http://tanyabrassie.com/). Logo files can be found [here](https://github.com/isaacs/node-glob/tree/master/logo).
 
 The logo is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
