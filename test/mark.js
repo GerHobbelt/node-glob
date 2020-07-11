@@ -1,16 +1,20 @@
 require("./global-leakage.js")
 var test = require("tap").test
 var glob = require('../')
-process.chdir(__dirname + '/fixtures')
+var path = require('path')
+
+process.chdir(path.join(__dirname, 'fixtures'))
 
 // expose timing issues
 var lag = 5
-glob.Glob.prototype._stat = function(o) { return function(f, cb) {
+glob.Glob.prototype._stat = function(o) { 
+  return function(f, cb) {
   var args = arguments
   setTimeout(function() {
     o.call(this, f, cb)
   }.bind(this), lag += 5)
-}}(glob.Glob.prototype._stat)
+}
+}(glob.Glob.prototype._stat)
 
 test('mark with cwd', function (t) {
   var pattern = '*/*'
@@ -26,10 +30,8 @@ test('mark with cwd', function (t) {
       'bc/e/',
       'c/d/',
       'cb/e/',
+      'symlink/a/'
     ].sort()
-
-    if (process.platform !== 'win32')
-      expect.push('symlink/a/')
 
     t.same(res.sort(), expect)
     t.same(glob.sync(pattern, opt).sort(), expect)
@@ -72,17 +74,17 @@ test("mark, no / on pattern", function (t) {
   glob(pattern, opt, function (er, results) {
     if (er)
       throw er
-    var expect = [ 'a/abcdef/',
-                   'a/abcfed/',
-                   'a/b/',
-                   'a/bc/',
-                   'a/c/',
-                   'a/cb/',
-                   'a/x/',
-                   'a/z/' ]
-
-    if (process.platform !== "win32")
-      expect.push('a/symlink/')
+    var expect = [
+      'a/abcdef/',
+      'a/abcfed/',
+      'a/b/',
+      'a/bc/',
+      'a/c/',
+      'a/cb/',
+      'a/symlink/',
+      'a/x/',
+      'a/z/' 
+    ]
 
     expect = expect.sort()
 
@@ -100,17 +102,17 @@ test("mark=false, no / on pattern", function (t) {
   glob(pattern, opt, function (er, results) {
     if (er)
       throw er
-    var expect = [ 'a/abcdef',
-                   'a/abcfed',
-                   'a/b',
-                   'a/bc',
-                   'a/c',
-                   'a/cb',
-                   'a/x',
-                   'a/z' ]
-
-    if (process.platform !== "win32")
-      expect.push('a/symlink')
+    var expect = [
+      'a/abcdef',
+      'a/abcfed',
+      'a/b',
+      'a/bc',
+      'a/c',
+      'a/cb',
+      'a/symlink',
+      'a/x',
+      'a/z' 
+    ]
 
     expect = expect.sort()
 
@@ -128,17 +130,17 @@ test("mark=true, / on pattern", function (t) {
   glob(pattern, opt, function (er, results) {
     if (er)
       throw er
-    var expect = [ 'a/abcdef/',
-                    'a/abcfed/',
-                    'a/b/',
-                    'a/bc/',
-                    'a/c/',
-                    'a/cb/',
-                    'a/x/',
-                    'a/z/' ]
-
-    if (process.platform !== "win32")
-      expect.push('a/symlink/')
+    var expect = [ 
+      'a/abcdef/',
+      'a/abcfed/',
+      'a/b/',
+      'a/bc/',
+      'a/c/',
+      'a/cb/',
+      'a/symlink/',
+      'a/x/',
+      'a/z/' 
+    ]
 
     expect = expect.sort()
 
@@ -156,16 +158,17 @@ test("mark=false, / on pattern", function (t) {
   glob(pattern, opt, function (er, results) {
     if (er)
       throw er
-    var expect = [ 'a/abcdef/',
-                   'a/abcfed/',
-                   'a/b/',
-                   'a/bc/',
-                   'a/c/',
-                   'a/cb/',
-                   'a/x/',
-                   'a/z/' ]
-    if (process.platform !== "win32")
-      expect.push('a/symlink/')
+    var expect = [ 
+      'a/abcdef/',
+      'a/abcfed/',
+      'a/b/',
+      'a/bc/',
+      'a/c/',
+      'a/cb/',
+      'a/symlink/',
+      'a/x/',
+      'a/z/' 
+    ]
 
     expect = expect.sort()
 
