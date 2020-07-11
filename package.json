@@ -2,7 +2,7 @@
   "name": "@GerHobbelt/glob",
   "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
   "description": "a little globber",
-  "version": "7.1.7-1",
+  "version": "7.1.7-2",
   "repository": "GerHobbelt/node-glob",
   "main": "glob.js",
   "engines": {
@@ -27,7 +27,8 @@
     "test-regen": "npm run profclean && TEST_REGEN=1 node test/00-setup.js",
     "bench": "bash benchmark.sh",
     "prof": "bash prof.sh && cat profile.txt",
-    "benchclean": "node benchclean.js"
+    "benchclean": "node benchclean.js",
+    "pub": "npm publish --access public"
   },
   "license": "ISC",
   "funding": {
