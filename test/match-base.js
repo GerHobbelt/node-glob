@@ -1,7 +1,8 @@
 var t = require('tap')
 var glob = require('../')
 var path = require('path')
-var fixtureDir = path.resolve(__dirname, 'fixtures')
+
+var fixtureDir = path.resolve(path.join(__dirname, 'fixtures')).replace(/\\/g, '/')
 
 var pattern = 'a*'
 var expect = [
@@ -10,8 +11,9 @@ var expect = [
   'a/abcfed',
 ]
 
-if (process.platform !== 'win32')
+if (process.platform !== 'win32') {
   expect.push('a/symlink/a', 'a/symlink/a/b/c/a')
+}
 
 t.test('chdir', function (t) {
   var origCwd = process.cwd()

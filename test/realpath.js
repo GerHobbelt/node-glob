@@ -3,7 +3,8 @@ var test = require('tap').test
 // pattern to find a bunch of duplicates
 var pattern = 'a/symlink/{*,**/*/*/*,*/*/**,*/*/*/*/*/*}'
 var path = require('path')
-var fixtureDir = path.resolve(__dirname, 'fixtures')
+
+var fixtureDir = path.resolve(path.join(__dirname, 'fixtures'))
 process.chdir(fixtureDir)
 
 if (process.platform === 'win32')
@@ -71,7 +72,7 @@ cases.forEach(function (c) {
   var expect = c[1]
   if (!(opt.nonull && expect[0].match(/^no one here/))) {
     expect = expect.map(function (d) {
-      d = (opt.cwd ? path.resolve(opt.cwd) : fixtureDir) + '/' + d
+      d = path.join((opt.cwd ? path.resolve(opt.cwd) : fixtureDir), d)
       return d.replace(/\\/g, '/')
     })
   }

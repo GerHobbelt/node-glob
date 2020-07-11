@@ -2,7 +2,8 @@ require("./global-leakage.js")
 var test = require("tap").test
 var glob = require('../')
 var path = require('path')
-process.chdir(__dirname + '/fixtures')
+
+process.chdir(path.join(__dirname, 'fixtures'))
 
 function cacheCheck(g, t) {
   // verify that path cache keys are all absolute
@@ -15,7 +16,7 @@ function cacheCheck(g, t) {
 }
 
 // [pattern, options, expect]
-var root = path.resolve('a')
+var root = path.resolve('a').replace(/\\/g, '/')
 var cases = [
   [ '*/**', { cwd: 'a' }, [
       'abcdef/g/h',

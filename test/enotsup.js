@@ -5,7 +5,8 @@ var sawAsyncENOTSUP = false
 var sawSyncENOTSUP = false
 
 var path = require('path')
-var fixtureDir = path.resolve(__dirname, 'fixtures')
+
+var fixtureDir = path.resolve(path.join(__dirname, 'fixtures')).replace(/\\/g, '/')
 var allowedDirs = [
   path.resolve(fixtureDir, 'a'),
   path.resolve(fixtureDir, 'a', 'abcdef'),

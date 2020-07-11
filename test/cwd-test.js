@@ -1,10 +1,11 @@
 require("./global-leakage.js")
 var tap = require("tap")
 
-var origCwd = process.cwd()
-process.chdir(__dirname + '/fixtures')
 var path = require('path')
 var glob = require('../')
+
+var origCwd = process.cwd()
+process.chdir(path.join(__dirname, 'fixtures'))
 
 function cacheCheck(g, t) {
   // verify that path cache keys are all absolute
@@ -27,7 +28,7 @@ tap.test("changing cwd and searching for **/d", function (t) {
   })
 
   t.test('a', function (t) {
-    var g = glob('**/d', {cwd:path.resolve('a')}, function (er, matches) {
+    var g = glob('**/d', {cwd:path.resolve('a').replace(/\\/g, '/')}, function (er, matches) {
       t.ifError(er)
       t.like(matches, [ 'b/c/d', 'c/d' ])
       cacheCheck(g, t)
@@ -36,7 +37,7 @@ tap.test("changing cwd and searching for **/d", function (t) {
   })
 
   t.test('a/b', function (t) {
-    var g = glob('**/d', {cwd:path.resolve('a/b')}, function (er, matches) {
+    var g = glob('**/d', {cwd:path.resolve('a/b').replace(/\\/g, '/')}, function (er, matches) {
       t.ifError(er)
       t.like(matches, [ 'c/d' ])
       cacheCheck(g, t)
@@ -45,7 +46,7 @@ tap.test("changing cwd and searching for **/d", function (t) {
   })
 
   t.test('a/b/', function (t) {
-    var g = glob('**/d', {cwd:path.resolve('a/b/')}, function (er, matches) {
+    var g = glob('**/d', {cwd:path.resolve('a/b/').replace(/\\/g, '/')}, function (er, matches) {
       t.ifError(er)
       t.like(matches, [ 'c/d' ])
       cacheCheck(g, t)
@@ -68,7 +69,7 @@ tap.test("changing cwd and searching for **/d", function (t) {
 tap.test('non-dir cwd should raise error', function (t) {
   var notdir = 'a/b/c/d'
   var notdirRE = /a[\\\/]b[\\\/]c[\\\/]d/
-  var abs = path.resolve(notdir)
+  var abs = path.resolve(notdir).replace(/\\/g, '/')
   var expect = new Error('ENOTDIR invalid cwd ' + abs)
   expect.code = 'ENOTDIR'
   expect.path = notdirRE

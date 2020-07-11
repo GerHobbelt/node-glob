@@ -5,7 +5,7 @@ var path = require('path')
 var common = require('../common.js')
 var pattern = 'a/b/**';
 var bashResults = require('./bash-results.json')
-process.chdir(__dirname + '/fixtures')
+process.chdir(path.join(__dirname, 'fixtures'));
 
 t.Test.prototype.addAssert('isAbsolute', 1, function (file, message, extra) {
   extra.found = file
