@@ -2,7 +2,6 @@ module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = require('fs')
-var rp = require('fs.realpath')
 var minimatch = require('@gerhobbelt/minimatch')
 var path = require('path')
 var assert = require('assert')
@@ -53,7 +52,7 @@ GlobSync.prototype._finish = function () {
       for (var p in matchset) {
         try {
           p = self._makeAbs(p)
-          var real = rp.realpathSync(p, self.realpathCache)
+          var real = fs.realpathSync(p)
           set[real] = true
         } catch (er) {
           if (er.syscall === 'stat')

@@ -41,8 +41,8 @@
 module.exports = glob
 
 var fs = require('fs')
-var rp = require('fs.realpath')
 var minimatch = require('@gerhobbelt/minimatch')
+var inherits = require('util').inherits
 var EE = require('events').EventEmitter
 var path = require('path')
 var assert = require('assert')
@@ -51,11 +51,17 @@ var common = require('./common.js')
 var setopts = common.setopts
 var ownProp = common.ownProp
 var inflight = require('inflight')
-var util = require('util')
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = require('once')
+const once = f => {
+  let v = false;
+  return function() {
+    if (v) return;
+    v = true;
+    return f.apply(this, arguments);
+  }
+};
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') {
@@ -121,7 +127,7 @@ glob.hasMagic = function (pattern, options_) {
 }
 
 glob.Glob = Glob
-util.inherits(Glob, EE)
+inherits(Glob, EE)
 function Glob (pattern, options, cb) {
   if (typeof options === 'function') {
     cb = options
@@ -245,7 +251,7 @@ Glob.prototype._realpathSet = function (index, cb) {
     // one or more of the links in the realpath couldn't be
     // resolved.  just return the abs value in that case.
     p = self._makeAbs(p)
-    rp.realpath(p, self.realpathCache, function (er, real) {
+    fs.realpath(p, function (er, real) {
       if (!er)
         set[real] = true
       else if (er.syscall === 'stat')

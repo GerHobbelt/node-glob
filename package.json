@@ -10,10 +10,8 @@
   },
   "dependencies": {
     "@gerhobbelt/gitignore-parser": "0.2.0-8",
-    "fs.realpath": "^1.0.0",
     "inflight": "^1.0.6",
-    "@gerhobbelt/minimatch": "3.0.4-4",
-    "once": "^1.4.0"
+    "@gerhobbelt/minimatch": "3.0.4-4"
   },
   "devDependencies": {
     "clone": "2.1.2",
@@ -25,7 +23,7 @@
   },
   "scripts": {
     "profclean": "rm -f v8.log profile.txt",
-    "test": "tap test/*.js --cov",
+    "test": "tap test/*.js --cov --before=test/00-setup.js --after=test/zz-cleanup.js",
     "test-regen": "npm run profclean && TEST_REGEN=1 node test/00-setup.js",
     "bench": "bash benchmark.sh",
     "prof": "bash prof.sh && cat profile.txt",

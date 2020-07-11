@@ -19,6 +19,8 @@ glob("**/*.js", {
 })
 ```
 
+This is a *fork* of `glob`. It removes outdated fs/path polyfill.
+
 ![](logo/glob.png)
 
 ## Usage
@@ -26,7 +28,7 @@ glob("**/*.js", {
 Install with npm
 
 ```
-npm i glob
+npm i glob@npm:@jixun/glob
 ```
 
 ```javascript
