@@ -29,7 +29,7 @@ if (process.platform === 'win32') {
   pathToUnix = function (p) {
     return p;
   }
-  
+}
 
 function WinPath (p) {
   if (!(this instanceof WinPath))
