@@ -2,7 +2,7 @@ var test = require("tap").test
 var glob = require('../')
 var path = require("path")
 
-var dir = __dirname.split('\\').join('/') + '/edge/'
+var dir = path.resolve(path.join(__dirname, 'fixtures/edge')).split('\\').join('/') + '/'
 
 var debugEC = false; 
 

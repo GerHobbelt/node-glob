@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@gerhobbelt/gitignore-parser": "0.2.0-8",
-    "inflight": "^1.0.6",
-    "@gerhobbelt/minimatch": "3.0.4-4"
+    "@gerhobbelt/minimatch": "3.0.4-4",
+    "inflight": "^1.0.6"
   },
   "devDependencies": {
     "clone": "2.1.2",
