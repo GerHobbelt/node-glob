@@ -1,12 +1,13 @@
 var glob = require('../')
+var path = require('path')
 var test = require('tap').test
 
-process.chdir(__dirname + '/fixtures')
+process.chdir(path.join(__dirname, 'fixtures'))
 
-if (process.platform === 'win32') {
-  require('tap').plan(0, 'skip on windows')
-  return
-}
+// if (process.platform === 'win32') {
+//   require('tap').plan(0, 'skip on windows')
+//   return
+// }
 
 test('follow symlinks', function (t) {
   var pattern = 'a/symlink/**'

@@ -2,9 +2,10 @@ var test = require('tap').test
 var path = require('path')
 var os = require('os')
 
-var uncRoot = '\\\\' + os.hostname() + '\\glob-test'
-uncRoot = ('\\\\' + os.hostname() + '\\' + path.join(__dirname, 'fixtures/a').replace(/^([^\\/]+):([\\/].*)$/, '$1$$$2')).replace(/\\/g, '/');
-console.error('########################### unc path', uncRoot)
+//var uncRoot = '\\\\' + os.hostname() + '\\glob-test'
+//
+// instead use an implicit share: on Windows, every drive is also available as //HOSTNAME/DRIVE$/... :
+var uncRoot = ('\\\\' + os.hostname() + '\\' + path.join(__dirname, 'fixtures/a').replace(/^([^\\/]+):([\\/].*)$/, '$1$$$2')).replace(/\\/g, '/');
 
 
 var localRoot = path.resolve(__dirname, 'fixtures/a').replace(/\\/g, '/')

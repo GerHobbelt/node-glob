@@ -1,10 +1,11 @@
 var fs = require('fs')
 var test = require('tap').test
 var glob = require('../')
+var path = require('path')
 var mkdirp = require('mkdirp')
 
-if (process.platform === 'win32')
-  return require('tap').plan(0, 'skip on windows')
+// if (process.platform === 'win32')
+//   return require('tap').plan(0, 'skip on windows')
 
 process.chdir(__dirname)
 

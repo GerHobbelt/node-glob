@@ -1,7 +1,13 @@
 require("./global-leakage.js")
-var dir = __dirname + '/fixtures'
 
 var fs = require('fs')
+var path = require('path')
+
+var glob = require('../')
+var t = require('tap')
+
+var dir = path.join(__dirname, 'fixtures')
+
 var expect = [
   'a/abcdef',
   'a/abcdef/g',
@@ -37,8 +43,6 @@ fs.lstatSync = function (path) {
   return lstatSync.call(fs, path)
 }
 
-var glob = require('../')
-var t = require('tap')
 
 t.test('stat errors other than ENOENT are ok', function (t) {
   t.plan(2)
@@ -87,11 +91,6 @@ t.test('globstar with error in root', function (t) {
     'a/x',
     'a/z'
   ]
-  if (process.platform === 'win32') {
-    expect = expect.filter(function(path) {
-      return path.indexOf('/symlink') === -1
-    })
-  }
 
   var pattern = 'a/**'
   t.plan(2)
