@@ -149,7 +149,11 @@ function setopts (self, pattern, options) {
   self.statCache = options.statCache || Object.create(null)
   self.symlinks = options.symlinks || Object.create(null)
 
-  if (self.debugMode) self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
+  if (self.debugMode) {
+    self.debug = (typeof self.debugMode === 'function' ? self.debugMode : console.error)
+  } else {
+    self.debug = () => {}
+  }
 
   self.changedCwd = false
   var cwd = process.cwd()
