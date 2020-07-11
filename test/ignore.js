@@ -2,7 +2,7 @@ require('./global-leakage.js')
 // Ignore option test
 // Show that glob ignores results matching pattern on ignore option
 
-var glob = require('../glob.js')
+var glob = require('../')
 var test = require('tap').test
 var path = require('path')
 var Ignore = require('ignore')
@@ -62,36 +62,38 @@ var cases = [
   [ '**', ['abc{def,fed}/*', make('/abcdef')], ['abcfed', 'abcfed/g/h', 'b', 'b/c', 'b/c/d', 'bc', 'bc/e', 'bc/e/f', 'c', 'c/d', 'c/d/c', 'c/d/c/b', 'cb', 'cb/e', 'cb/e/f', 'symlink', 'symlink/a', 'symlink/a/b', 'symlink/a/b/c', 'x', 'z'], 'a']
 ]
 
-process.chdir(__dirname + '/fixtures')
+process.chdir(path.join(__dirname, 'fixtures'))
 
 cases.forEach(function (c, i) {
   var pattern = c[0]
   var ignore = c[1]
   var expect = c[2].sort()
   var opt = c[3]
-  var name = i + ' ' + pattern + ' ' + JSON.stringify(ignore)
   if (typeof opt === 'string')
     opt = { cwd: opt }
 
-  if (opt)
-    name += ' ' + JSON.stringify(opt)
-  else
+  if (!opt) {
     opt = {}
+  }
 
   var matches = []
 
-  opt.ignore = ignore
+  if (ignore) {
+    opt.ignore = ignore
+  }
+
+  var name = i + ' ' + JSON.stringify({ pattern, options: opt })
 
   test(name, function (t) {
     glob(pattern, opt, function (er, res) {
       if (er)
         throw er
 
-      if (process.platform === 'win32') {
-        expect = expect.filter(function (f) {
-          return !/\bsymlink\b/.test(f)
-        })
-      }
+      // if (process.platform === 'win32') {
+      //   expect = expect.filter(function (f) {
+      //     return !/\bsymlink\b/.test(f)
+      //   })
+      // }
 
       t.same(res.sort(), expect, 'async')
       t.same(matches.sort(), expect, 'match events')
@@ -106,11 +108,11 @@ cases.forEach(function (c, i) {
 
 test('race condition', function (t) {
   process.chdir(__dirname)
-  var pattern = 'fixtures/*'
-  ;[true, false].forEach(function (dot) {
-    ;['fixtures/**', null].forEach(function (ignore) {
-      ;[false, true].forEach(function (nonull) {
-        ;[false, process.cwd(), '.'].forEach(function (cwd) {
+  var pattern = 'fixtures/*';
+  [true, false].forEach(function (dot) {
+    ['fixtures/**', null].forEach(function (ignore) {
+      [false, true].forEach(function (nonull) {
+        [false, process.cwd(), '.'].forEach(function (cwd) {
           var opt = {
             dot: dot,
             ignore: ignore,
@@ -118,7 +120,7 @@ test('race condition', function (t) {
           }
           if (cwd)
             opt.cwd = cwd
-          var expect = ignore ? [] : [ 'fixtures/a' ]
+          var expect = ignore ? [] : [ 'fixtures/a', 'fixtures/edge' ]
           t.test(JSON.stringify(opt), function (t) {
             t.plan(2)
             t.same(glob.sync(pattern, opt), expect)
