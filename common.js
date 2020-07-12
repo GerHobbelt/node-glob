@@ -204,6 +204,8 @@ function finish (self) {
   var nou = self.nounique
   var all = nou ? [] : Object.create(null)
 
+  self.debug('finish', {nou})
+
   for (var i = 0, l = self.matches.length; i < l; i ++) {
     var matches = self.matches[i]
     if (!matches || Object.keys(matches).length === 0) {
@@ -230,6 +232,8 @@ function finish (self) {
   if (!nou)
     all = Object.keys(all)
 
+  self.debug('finish unsorted all', {all})
+
   if (!self.nosort)
     all = all.sort(self.nocase ? alphasorti : alphasort)
 
@@ -249,10 +253,15 @@ function finish (self) {
     }
   }
 
-  if (self.ignore.length)
+  self.debug('finish sorted & marked', {all})
+
+  if (self.ignore.length) {
     all = all.filter(function(m) {
       return !isIgnored(self, m)
     })
+   }
+
+  self.debug('finish FOUND', {all})
 
   self.found = all
 }

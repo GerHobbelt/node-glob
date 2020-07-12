@@ -46,7 +46,6 @@ var inherits = require('util').inherits
 var EE = require('events').EventEmitter
 var path = require('path')
 var assert = require('assert')
-var globSync = require('./sync.js')
 var common = require('./common.js')
 var setopts = common.setopts
 var ownProp = common.ownProp
@@ -74,19 +73,40 @@ function glob (pattern, options, cb) {
     options = {}
   }
 
-  if (options.sync) {
+  if (options.sync && !options.noprocess) {
     if (cb) {
       throw new TypeError('callback provided to sync glob\n'+
                           'See: https://github.com/isaacs/node-glob/issues/167')
     }
-    return globSync(pattern, options)
   }
 
   return new Glob(pattern, options, cb)
 }
 
+function globSync (pattern, options) {
+  if (typeof options === 'function') {
+      throw new TypeError('callback provided to sync glob\n'+
+                          'See: https://github.com/isaacs/node-glob/issues/167')
+  }
+  options = Object.assign({}, options || {}, { sync: true })
+
+  return new Glob(pattern, options).found
+}
+
+function GlobSync (pattern, options) {
+  if (typeof options === 'function') {
+      throw new TypeError('callback provided to sync glob\n'+
+                          'See: https://github.com/isaacs/node-glob/issues/167')
+  }
+  if (options && !options.sync) {
+    options = Object.assign({}, options || {}, { sync: true })
+  }
+  return Glob(pattern, options)
+}
+
+
 glob.sync = globSync
-var GlobSync = glob.GlobSync = globSync.GlobSync
+glob.GlobSync = globSync.GlobSync = GlobSync
 
 // old api surface
 glob.glob = glob
@@ -136,12 +156,15 @@ function Glob (pattern, options, cb) {
     options = null
   }
 
-  if (options && options.sync) {
+  if (!pattern) {
+    throw new Error('must provide pattern')
+  }
+
+  if (options && options.sync && !options.noprocess) {
     if (cb) {
       throw new TypeError('callback provided to sync glob\n'+
                           'See: https://github.com/isaacs/node-glob/issues/167')
     }
-    return new GlobSync(pattern, options)
   }
 
   if (!(this instanceof Glob)) {
@@ -150,6 +173,7 @@ function Glob (pattern, options, cb) {
 
   setopts(this, pattern, options)
   this._didRealPath = false
+  this._inflightSyncCache = Object.create(null);
 
   // process each pattern in the minimatch set
   var n = this.minimatch.set.length
@@ -189,8 +213,9 @@ function Glob (pattern, options, cb) {
 
   function done () {
     --self._processing
+    self.debug('glob DONE', { processing: self._processing, sync, syncOption: self.sync })
     if (self._processing <= 0) {
-      if (sync) {
+      if (sync && !self.sync) {
         process.nextTick(function () {
           self._finish()
         })
@@ -226,12 +251,14 @@ Glob.prototype._realpath = function () {
     return this._finish()
 
   var self = this
-  for (var i = 0; i < this.matches.length; i++)
+  for (var i = 0; i < this.matches.length; i++) {
     this._realpathSet(i, next)
+  }
 
   function next () {
-    if (--n === 0)
+    if (--n === 0) {
       self._finish()
+    }
   }
 }
 
@@ -253,13 +280,14 @@ Glob.prototype._realpathSet = function (index, cb) {
     // one or more of the links in the realpath couldn't be
     // resolved.  just return the abs value in that case.
     p = self._makeAbs(p)
-    fs.realpath(p, function (er, real) {
+    self.fs_realpath(p, function (er, real) {
       if (!er)
         set[real] = true
       else if (er.syscall === 'stat')
         set[p] = true
-      else
-        self.emit('error', er) // srsly wtf right here
+      else {
+        self.emit_error(er); // srsly wtf right here
+      }
 
       if (--n === 0) {
         self.matches[index] = set
@@ -391,7 +419,6 @@ Glob.prototype._processReaddir = function (prefix, read, abs, remain, index, inG
 }
 
 Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-
   this.debug('processReaddir2', { prefix, read, abs, rawGlob: remain[0]._glob, index, entries, inGlobStar })
 
   // if the abs isn't a dir, then nothing can match!
@@ -424,8 +451,9 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
 
   var len = matchedEntries.length
   // If there are no matched entries, then nothing matches.
-  if (len === 0)
+  if (len === 0) {
     return cb()
+  }
 
   // if this is the last remaining pattern bit, then no need for
   // an additional stat *unless* the user has specified mark or
@@ -503,8 +531,9 @@ Glob.prototype._emitMatch = function (index, e) {
   this.matches[index][e] = true
 
   var st = this.statCache[abs]
-  if (st)
+  if (st) {
     this.emit('stat', e, st)
+  }
 
   this.emit('match', e)
 }
@@ -515,15 +544,17 @@ Glob.prototype._readdirInGlobStar = function (abs, cb) {
 
   // follow all symlinked directories forever
   // just proceed as if this is a non-globstar situation
-  if (this.follow)
+  if (this.follow) {
     return this._readdir(abs, false, cb)
+  }
 
   var lstatkey = 'lstat\0' + abs
   var self = this
-  var lstatcb = inflight(lstatkey, lstatcb_)
-
-  if (lstatcb)
-    fs.lstat(abs, lstatcb)
+  var lstatcb = this.inflight(lstatkey, lstatcb_)
+  this.debug('lstat:', { abs, inflight: !!lstatcb })
+  if (lstatcb) {
+    this.fs_lstat(abs, lstatcb)
+  }
 
   function lstatcb_ (er, lstat) {
     if (er && (er.code === 'ENOENT' || er.code === 'EPERM')) {
@@ -548,11 +579,11 @@ Glob.prototype._readdir = function (abs, inGlobStar, cb) {
   if (this.aborted)
     return
 
-  cb = inflight('readdir\0'+abs+'\0'+inGlobStar, cb)
+  cb = this.inflight('readdir\0'+abs+'\0'+inGlobStar, cb)
+  this.debug('readdir', { abs, inGlobStar, inflight: !cb })
   if (!cb)
     return
 
-  this.debug('readdir', { abs, inGlobStar })
   if (inGlobStar && !ownProp(this.symlinks, abs))
     return this._readdirInGlobStar(abs, cb)
 
@@ -565,7 +596,7 @@ Glob.prototype._readdir = function (abs, inGlobStar, cb) {
       return cb(null, c)
   }
 
-  fs.readdir(abs, readdirCb(this, abs, cb))
+  this.fs_readdir(abs, readdirCb(this, abs, cb))
 }
 
 function readdirCb (self, abs, cb) {
@@ -615,10 +646,9 @@ Glob.prototype._readdirError = function (f, er, cb) {
         var error = new Error(er.code + ' invalid cwd ' + this.cwd)
         error.path = this.cwd
         error.code = er.code
-        this.emit('error', error)
         // If the error is handled, then we abort
         // if not, we threw out of here
-        this.abort()
+        this.emit_error(error, true)
       }
       break
 
@@ -634,10 +664,9 @@ Glob.prototype._readdirError = function (f, er, cb) {
     default: // some unusual error.  Treat as failure.
       this.cache[this._makeAbs(f)] = false
       if (this.strict) {
-        this.emit('error', er)
         // If the error is handled, then we abort
         // if not, we threw out of here
-        this.abort()
+        this.emit_error(er, true)
       }
       if (!this.silent)
         console.error('glob error', er)
@@ -656,7 +685,7 @@ Glob.prototype._processGlobStar = function (prefix, read, abs, remain, index, in
 
 
 Glob.prototype._processGlobStar2 = function (prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-  this.debug('processGlobStar2', prefix, read, abs, remain, index, inGlobStar, entries )
+  this.debug('processGlobStar2', { prefix, read, abs, remain, index, inGlobStar, entries })
 
   // no entries means not a dir, so it can never have matches
   // foo.txt/** doesn't match foo.txt
@@ -773,16 +802,18 @@ Glob.prototype._stat = function (f, cb) {
   }
 
   var self = this
-  var statcb = inflight('stat\0' + abs, lstatcb_)
-  if (statcb)
-    fs.lstat(abs, statcb)
+  var statcb = this.inflight('stat\0' + abs, lstatcb_)
+  this.debug('stat:', { abs, inglight: !!statcb })
+  if (statcb) {
+    this.fs_lstat(abs, statcb)
+  }
 
   function lstatcb_ (er, lstat) {
     self.debug('lstat cb:', { er })
     if (lstat && lstat.isSymbolicLink()) {
       // If it's a symlink, then treat it as the target, unless
       // the target does not exist, then treat it as a file.
-      return fs.stat(abs, function (er2, stat) {
+      self.fs_stat(abs, function (er2, stat) {
         if (er2)
           self._stat2(f, abs, null, lstat, cb)
         else
@@ -808,13 +839,109 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
     return cb(null, false, stat)
 
   var c = true
-  if (stat)
+  if (stat) {
     c = stat.isDirectory() ? 'DIR' : 'FILE'
+  }
 
   this.cache[abs] = this.cache[abs] || c
 
-  if (needDir && c === 'FILE')
+  if (needDir && c === 'FILE') {
     return cb()
+  }
 
   return cb(null, c, stat)
+}
+
+Glob.prototype.fs_realpath = function (p, cb) {
+  this.debug('fs_realpath', { sync: this.sync, path: p })
+  if (this.sync) {
+    try {
+      var real = fs.realpathSync(p);
+      cb(null, real)
+    } catch (er) {
+      cb(er)
+    }
+  } else {
+    fs.realpath(p, cb);
+  }
+}
+
+Glob.prototype.emit_error = function (er, mustAbort) {
+  if (this.sync) {
+    throw er
+  } else {
+    this.emit('error', er)
+    if (mustAbort) {
+      this.abort();
+    }
+  }
+}
+
+Glob.prototype.fs_lstat = function (p, cb) {
+  this.debug('fs_lstat', { sync: this.sync, path: p })
+  if (this.sync) {
+    try {
+      var st = fs.lstatSync(p);
+      cb(null, st)
+    } catch (er) {
+      cb(er)
+    }
+  } else {
+    fs.lstat(p, cb)
+  }
+}
+
+Glob.prototype.fs_readdir = function (p, cb) {
+  this.debug('fs_readdir', { sync: this.sync, path: p })
+  if (this.sync) {
+    try {
+      var rv = fs.readdirSync(p);
+      cb(null, rv)
+    } catch (er) {
+      cb(er)
+    }
+  } else {
+    fs.readdir(p, cb)
+  }
+}
+
+Glob.prototype.fs_stat = function (p, cb) {
+  this.debug('fs_stat', { sync: this.sync, path: p })
+  if (this.sync) {
+    try {
+      var st = fs.statSync(p);
+      cb(null, st)
+    } catch (er) {
+      cb(er)
+    }
+  } else {
+    fs.stat(p, cb);
+  }
+}
+
+Glob.prototype.inflight = function (key, cb) {
+  this.debug('glob.inflight', { sync: this.sync, key })
+  if (this.sync) {
+    if (this._inflightSyncCache[key]) {
+      this.debug('glob.inflight SKIP @@@@@@@@@@@@@@@@@@@@@@@@@@@ ', { sync: this.sync, key }, new Error('x'))
+      this._inflightSyncCache[key].push(cb)
+      return null
+    }
+    let self = this;
+    return function inflight_cb(...args) {
+      self._inflightSyncCache[key] = []
+      self.debug('inflight callback exec:', { key, args })
+      cb.apply(null, args);
+      // also exec any pushed callbacks:
+      let arr = self._inflightSyncCache[key]
+      for (let i = 0; i < arr.length; i++) {
+        let cb2 = arr[i];
+        self.debug('inflight callback exec queued #:', { key, index: i, args })
+        cb2.apply(null, args);
+      }
+      self._inflightSyncCache[key] = false
+    }
+  } else {
+    return inflight(key, cb);
+  }
 }

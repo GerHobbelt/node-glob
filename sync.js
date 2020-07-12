@@ -1,3 +1,5 @@
+// obsolete
+
 module.exports = globSync
 globSync.GlobSync = GlobSync
 
@@ -21,9 +23,10 @@ function globSync (pattern, options) {
 }
 
 function GlobSync (pattern, options) {
-  if (!pattern)
+  if (!pattern) {
     throw new Error('must provide pattern')
-
+  }
+  
   if (typeof options === 'function' || arguments.length === 3)
     throw new TypeError('callback provided to sync glob\n'+
                         'See: https://github.com/isaacs/node-glob/issues/167')
