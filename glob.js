@@ -53,6 +53,8 @@ var ownProp = common.ownProp
 var inflight = require('inflight')
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
+var pathToUnix = common.pathToUnix
+
 
 const once = f => {
   let v = false;
@@ -390,6 +392,8 @@ Glob.prototype._processReaddir = function (prefix, read, abs, remain, index, inG
 
 Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, inGlobStar, entries, cb) {
 
+  this.debug('processReaddir2', { prefix, read, abs, rawGlob: remain[0]._glob, index, entries, inGlobStar })
+
   // if the abs isn't a dir, then nothing can match!
   if (!entries)
     return cb()
@@ -416,7 +420,7 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
     }
   }
 
-  this.debug('processReaddir2', { prefix, read, abs, remainGlob: remain[0]._glob, matchedEntries, index, entries, inGlobStar })
+  this.debug('processReaddir2 matchedEntries', { prefix, read, abs, rawGlob, negate, matchedEntries, index, entries, inGlobStar })
 
   var len = matchedEntries.length
   // If there are no matched entries, then nothing matches.
@@ -442,7 +446,7 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
       }
 
       if (e.charAt(0) === '/' && !this.nomount) {
-        e = path.join(this.root, e)
+        e = pathToUnix(path.join(this.root, e))
       }
       this._emitMatch(index, e)
     }
@@ -612,6 +616,8 @@ Glob.prototype._readdirError = function (f, er, cb) {
         error.path = this.cwd
         error.code = er.code
         this.emit('error', error)
+        // If the error is handled, then we abort
+        // if not, we threw out of here
         this.abort()
       }
       break
@@ -701,12 +707,14 @@ Glob.prototype._processSimple = function (prefix, index, cb) {
 Glob.prototype._processSimple2 = function (prefix, index, er, exists, cb) {
   this.debug('processSimple2', {prefix, index, er, exists })
 
-  if (!this.matches[index])
+  if (!this.matches[index]) {
     this.matches[index] = Object.create(null)
+  }
 
   // If it doesn't exist, then just mark the lack of results
-  if (!exists)
+  if (!exists) {
     return cb()
+  }
 
   if (prefix && path.isAbsolute(prefix) && !this.nomount) {
     var trail = /[\/\\]$/.test(prefix)
@@ -714,13 +722,12 @@ Glob.prototype._processSimple2 = function (prefix, index, er, exists, cb) {
       prefix = path.join(this.root, prefix)
     } else {
       prefix = path.resolve(this.root, prefix)
-      if (trail)
+      if (trail) {
         prefix += '/'
+      }
     }
+    prefix = pathToUnix(prefix)
   }
-
-  if (process.platform === 'win32')
-    prefix = prefix.replace(/\\/g, '/')
 
   // Mark this as a match
   this._emitMatch(index, prefix)
@@ -803,6 +810,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
   var c = true
   if (stat)
     c = stat.isDirectory() ? 'DIR' : 'FILE'
+
   this.cache[abs] = this.cache[abs] || c
 
   if (needDir && c === 'FILE')

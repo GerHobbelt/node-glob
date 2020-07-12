@@ -10,6 +10,7 @@ var setopts = common.setopts
 var ownProp = common.ownProp
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
+var pathToUnix = common.pathToUnix
 
 function globSync (pattern, options) {
   if (typeof options === 'function' || arguments.length === 3)
@@ -66,6 +67,13 @@ GlobSync.prototype._finish = function () {
   common.finish(this)
 }
 
+GlobSync.prototype._mark = function (p) {
+  return common.mark(this, p)
+}
+
+GlobSync.prototype._makeAbs = function (f) {
+  return common.makeAbs(this, f)
+}
 
 GlobSync.prototype._process = function (pattern, index, inGlobStar) {
   assert(this instanceof GlobSync)
@@ -179,7 +187,7 @@ GlobSync.prototype._processReaddir = function (prefix, read, abs, remain, index,
       }
 
       if (e.charAt(0) === '/' && !this.nomount) {
-        e = path.join(this.root, e)
+        e = pathToUnix(path.join(this.root, e))
       }
       this._emitMatch(index, e)
     }
@@ -192,12 +200,13 @@ GlobSync.prototype._processReaddir = function (prefix, read, abs, remain, index,
   remain.shift()
   for (var i = 0; i < len; i ++) {
     var e = matchedEntries[i]
-    var newPattern
-    if (prefix)
-      newPattern = [prefix, e]
-    else
-      newPattern = [e]
-    this._process(newPattern.concat(remain), index, inGlobStar)
+    if (prefix) {
+      if (prefix.slice(-1) !== '/')
+        e = prefix + '/' + e
+      else
+        e = prefix + e
+    }
+    this._process([e].concat(remain), index, inGlobStar)
   }
 }
 
@@ -306,9 +315,9 @@ GlobSync.prototype._readdirEntries = function (abs, entries) {
 GlobSync.prototype._readdirError = function (f, er) {
   // handle errors, and cache the information
   switch (er.code) {
-    case 'EACCES':  // ignore permission denied path
     case 'ENOTSUP': // https://github.com/isaacs/node-glob/issues/205
     case 'ENOTDIR': // totally normal. means it *does* exist.
+    case 'EBUSY':
       var abs = this._makeAbs(f)
       this.cache[abs] = 'FILE'
       if (abs === this.cwdAbs) {
@@ -319,6 +328,7 @@ GlobSync.prototype._readdirError = function (f, er) {
       }
       break
 
+    case 'EACCES': // ignore permission denied path
     case 'ENOENT': // not terribly unusual
     case 'EPERM':
     case 'ELOOP':
@@ -355,8 +365,8 @@ GlobSync.prototype._processGlobStar = function (prefix, read, abs, remain, index
   // the noGlobStar pattern exits the inGlobStar state
   this._process(noGlobStar, index, false)
 
-  var len = entries.length
   var isSym = this.symlinks[abs]
+  var len = entries.length
 
   // If it's a symlink, and we're in a globstar, then stop
   if (isSym && inGlobStar)
@@ -394,13 +404,12 @@ GlobSync.prototype._processSimple = function (prefix, index) {
       prefix = path.join(this.root, prefix)
     } else {
       prefix = path.resolve(this.root, prefix)
-      if (trail)
+      if (trail) {
         prefix += '/'
+      }
     }
+    prefix = pathToUnix(prefix)
   }
-
-  if (process.platform === 'win32')
-    prefix = prefix.replace(/\\/g, '/')
 
   // Mark this as a match
   this._emitMatch(index, prefix)
@@ -468,10 +477,3 @@ GlobSync.prototype._stat = function (f) {
   return c
 }
 
-GlobSync.prototype._mark = function (p) {
-  return common.mark(this, p)
-}
-
-GlobSync.prototype._makeAbs = function (f) {
-  return common.makeAbs(this, f)
-}

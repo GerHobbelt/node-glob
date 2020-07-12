@@ -30,6 +30,7 @@ if (process.platform === 'win32') {
     return p;
   }
 }
+exports.pathToUnix = pathToUnix
 
 function WinPath (p) {
   if (!(this instanceof WinPath))
@@ -88,7 +89,7 @@ function ignoreMap (self, pattern) {
   var gmatcher = null
   // negative pattern does not require for additional check
   if (!matcher.negate && pattern.slice(-3) === '/**') {
-    var gpattern = pattern.replace(/(\/\*\*)+$/, '')
+    var gpattern = pattern.replace(/(?:\/\*\*)+$/, '')
     gmatcher = new Minimatch(gpattern, { dot: true, debug: self.debugMode })
   }
 
@@ -178,8 +179,7 @@ function setopts (self, pattern, options) {
     }
   }
 
-  self.root = path.resolve(self.root || "/")
-  self.root = pathToUnix(self.root)
+  self.root = pathToUnix(path.resolve(self.root || "/"))
 
   // TODO: is an absolute `cwd` supposed to be resolved against `root`?
   // e.g. { cwd: '/test', root: __dirname } === path.join(__dirname, '/test')
