@@ -64,10 +64,10 @@ function setupIgnores (self, options) {
     self.ignore = [self.ignore]
 
   if (self.ignore.length) {
-    self.debug('ignore list before mapping:', { ignoreList: self.ignore, absolutePattern, allPathsAreUnixFormatted: self.allPathsAreUnixFormatted })
+    self.debug('ignore list before mapping:', { ignoreList: self.ignore, absolutePattern })
     self.ignore = self.ignore.map(function (ignorePattern) {
-      if (absolutePattern && !self.allPathsAreUnixFormatted) {
-        ignorePattern = makeAbs(self, ignorePattern)
+      if (absolutePattern) {
+        ignorePattern = makeAbs(self, ignorePattern, true)
       }
 
       return ignoreMap(self, ignorePattern)
@@ -151,7 +151,6 @@ function setopts (self, pattern, options) {
   self.stat = !!options.stat
   self.noprocess = !!options.noprocess
   self.absolute = !!options.absolute
-  self.allPathsAreUnixFormatted = options.allPathsAreUnixFormatted
 
   self.maxLength = options.maxLength || Infinity
   self.cache = options.cache || Object.create(null)
@@ -159,7 +158,7 @@ function setopts (self, pattern, options) {
   self.symlinks = options.symlinks || Object.create(null)
 
   self.changedCwd = false
-  var cwd = process.cwd()
+  var cwd = pathToUnix(process.cwd())
   if (!ownProp(options, "cwd"))
     self.cwd = cwd
   else {
@@ -290,30 +289,27 @@ function mark (self, p) {
 }
 
 // lotta situps...
-function makeAbs (self, f) {
+function makeAbs (self, f, doNotCvt2Unix) {
   var abs
   
   if (f.charAt(0) === '/') {
     abs = path.join(self.root, f)
     self.debug('makeAbs ROOTED:', { before: f, root: self.root, after: abs })
-    abs = pathToUnix(abs);
   } else if (isWinDrive(f)) {
     abs = f + '/'                               // e.g. "C:/"
   } else if (path.isAbsolute(f) || f === '') {
     abs = f
-    if (!self.allPathsAreUnixFormatted) {
-      abs = pathToUnix(abs);
-    }
   } else if (self.changedCwd) {
     abs = path.resolve(self.cwd, f)
     self.debug('makeAbs changedCWD:', { before: f, cwd: self.cwd, after: abs })
-    abs = pathToUnix(abs);
   } else {
     abs = path.resolve(f)
     self.debug('makeAbs MISC:', { before: f, after: abs })
-    abs = pathToUnix(abs);
   }
 
+  if (!doNotCvt2Unix) {
+    abs = pathToUnix(abs);
+  }
   self.debug('makeAbs -->', { inputPath: f, returnPath: abs })
   return abs
 }
@@ -322,21 +318,30 @@ function makeAbs (self, f) {
 // Return true, if pattern ends with globstar '**', for the accompanying parent directory.
 // Ex:- If node_modules/** is the pattern, add 'node_modules' to ignore list along with it's contents
 function isIgnored (self, path) {
-  if (!self.ignore.length)
-    return false
-
-  return self.ignore.some(function(item) {
-    return item.ignore(path)
-  })
+  let rv;
+  if (!self.ignore.length) {
+    rv = false
+  } else {
+    rv = self.ignore.some(function(item) {
+      // self.debug('isIgnored SOME TEST:', { path, UNIXpath: pathToUnix(path), result: item.ignore(path), UNIXresult: item.ignore(pathToUnix(path)), minimatchResult: item.matcher.match(pathToUnix(path)), item, itemOptions: item.matcher.options })
+      return item.ignore(path)
+    })
+  }
+  self.debug('isIgnored:', { path, isIgnored: rv, ignores: self.ignore })
+  return rv;
 }
 
 function childrenIgnored (self, path) {
-  if (!self.ignore.length)
-    return false
-
-  return self.ignore.some(function(item) {
-    return item.ignoreChildren(path)
-  })
+  let rv;
+  if (!self.ignore.length) {
+    rv = false
+  } else {
+    rv = self.ignore.some(function(item) {
+      return item.ignoreChildren(path)
+    })
+  }
+  self.debug('childrenIgnored:', { path, childrenIgnored: rv, ignores: self.ignore })
+  return rv;
 }
 
 function isWinDrive (path) {

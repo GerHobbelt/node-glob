@@ -474,7 +474,11 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
       }
 
       if (e.charAt(0) === '/' && !this.nomount) {
-        e = pathToUnix(path.join(this.root, e))
+        // WARNING
+        //
+        // DO NOT apply pathToUnix(...) to the path.join() on the next line or tests will fail.
+        e = path.join(this.root, e) 
+        this.debug('processReaddir2 match A', {e, i, rooted: true, self: this })
       }
       this._emitMatch(index, e)
     }
@@ -668,8 +672,9 @@ Glob.prototype._readdirError = function (f, er, cb) {
         // if not, we threw out of here
         this.emit_error(er, true)
       }
-      if (!this.silent)
+      if (!this.silent) {
         console.error('glob error', er)
+      }
       break
   }
 

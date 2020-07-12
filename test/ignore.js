@@ -53,10 +53,9 @@ var cases = [
   [ 'a/*/.y/b', 'a/x/**', [ 'a/z/.y/b' ] ],
   [ 'a/**', 'a/**', [] ],
   [ '../a/**', '**/a/**', [] , { cwd: 'a', dot: true}],
-  // Absolute glob, relative ignore
+  [], // v--- Absolute glob, relative ignore
   [ toAbsoluteFixtures('a/*'), 'a/b', ['a/abcdef', 'a/abcfed', 'a/bc', 'a/c', 'a/cb', 'a/symlink', 'a/x', 'a/z'].map(toAbsoluteFixtures)],
-
-  // function-type options.ignore
+  [], // v--- function-type options.ignore
   [ '*/.abcdef', make('a/**'), [] ],
   [ 'a/*/.y/b', make('a/x/**'), [ 'a/z/.y/b' ] ],
   [ '**', ['abc{def,fed}/*', make('/abcdef')], ['abcfed', 'abcfed/g/h', 'b', 'b/c', 'b/c/d', 'bc', 'bc/e', 'bc/e/f', 'c', 'c/d', 'c/d/c', 'c/d/c/b', 'cb', 'cb/e', 'cb/e/f', 'symlink', 'symlink/a', 'symlink/a/b', 'symlink/a/b/c', 'x', 'z'], 'a']
@@ -65,6 +64,7 @@ var cases = [
 process.chdir(path.join(__dirname, 'fixtures'))
 
 cases.forEach(function (c, i) {
+  if (c.length === 0) return;
   var pattern = c[0]
   var ignore = c[1]
   var expect = c[2].sort()
@@ -82,7 +82,7 @@ cases.forEach(function (c, i) {
     opt.ignore = ignore
   }
 
-  var name = i + ' ' + JSON.stringify({ pattern, options: opt })
+  var name = 'line ' + (i + 23) + ' ' + JSON.stringify({ pattern, options: opt })
 
   test(name, function (t) {
     glob(pattern, opt, function (er, res) {
