@@ -36,8 +36,10 @@ library to do its matching.
 
   The debug function interface should mimic `console.error`, which is the default debug function when you set `options.debug = true`.
 
-- `options.allPathsAreUnixFormatted`
+- ignore paths are fully supported on Windows, including negated patterns.
 
+  HOWEVER: ignore paths are expected to be UNIX formatted as they MAY contain `\(...\)` and other minimatch escapes, which are not recognizable from `\\` Windows' paths!
+  
 - now copes much better with EBUSY, EPERM and EACCES file system errors, which would cause the original `glob` to fail dramatically. 
 
   This fork handles these errors more like warnings: the entries will be listed and no exception will be thrown for them.

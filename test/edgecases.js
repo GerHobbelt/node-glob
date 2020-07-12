@@ -59,12 +59,10 @@ test("should ignore pattern starting with paren", function(t) {
   var g = new glob.Glob(dir + "*", {ignore: [dir + "(case)"], debug: debugEC })
   g.on("end", function(r) {
     g.debug("found these files:", {r})
-    // TODO: WRONG ANSWER! Glob nukes the escapes in the ignore paths via windows transforms \\ --> / 
-    t.equal(r.length, 4)
+    t.equal(r.length, 3)
     t.equal(path.basename(r[0]), "!(case)")
     t.equal(path.basename(r[1]), "!case")
-    t.equal(path.basename(r[2]), "(case)")
-    t.equal(path.basename(r[3]), "case")
+    t.equal(path.basename(r[2]), "case")
     t.end()
   })
 })
@@ -73,12 +71,11 @@ test("should ignore pattern starting with star & paren", function(t) {
   var g = new glob.Glob(dir + "*", {ignore: [dir + "*(case)"], debug: debugEC })
   g.on("end", function(r) {
     g.debug("found these files:", {r})
-    // TODO: WRONG ANSWER! Glob nukes the escapes in the ignore paths via windows transforms \\ --> / 
-    t.equal(r.length, 4)
+    // TODO: WRONG ANSWER! 
+    t.equal(r.length, 3)
     t.equal(path.basename(r[0]), "!(case)")
     t.equal(path.basename(r[1]), "!case")
     t.equal(path.basename(r[2]), "(case)")
-    t.equal(path.basename(r[3]), "case")
     t.end()
   })
 })
@@ -87,12 +84,11 @@ test("should ignore pattern starting with exclam", function(t) {
   var g = new glob.Glob(dir + "*", {ignore: [dir + "\\!case"], debug: debugEC })
   g.on("end", function(r) {
     g.debug("found these files:", {r})
-    // TODO: WRONG ANSWER! Glob nukes the escapes in the ignore paths via windows transforms \\ --> / 
-    t.equal(r.length, 4)
+    // TODO: WRONG ANSWER! 
+    t.equal(r.length, 3)
     t.equal(path.basename(r[0]), "!(case)")
-    t.equal(path.basename(r[1]), "!case")
-    t.equal(path.basename(r[2]), "(case)")
-    t.equal(path.basename(r[3]), "case")
+    t.equal(path.basename(r[1]), "(case)")
+    t.equal(path.basename(r[2]), "case")
     t.end()
   })
 })
@@ -100,39 +96,35 @@ test("should ignore pattern starting with exclam", function(t) {
 test("should ignore pattern starting with exclam and paren", function(t) {
   var g = new glob.Glob(dir + "*", {ignore: [dir + "\\!(case)"], debug: debugEC })
   g.on("end", function(r) {
-    // TODO: WRONG ANSWER! Glob nukes the escapes in the ignore paths via windows transforms \\ --> / 
-    t.equal(r.length, 4)
-    t.equal(path.basename(r[0]), "!(case)")
-    t.equal(path.basename(r[1]), "!case")
-    t.equal(path.basename(r[2]), "(case)")
-    t.equal(path.basename(r[3]), "case")
+    g.debug("found these files:", {r})
+    // TODO: WRONG ANSWER! 
+    t.equal(r.length, 3)
+    t.equal(path.basename(r[0]), "!case")
+    t.equal(path.basename(r[1]), "(case)")
+    t.equal(path.basename(r[2]), "case")
     t.end()
   })
 })
 
 test("should ignore pattern that is a double-negative extglob A", function(t) {
-  var g = new glob.Glob(dir + "*", {ignore: [dir + "!\\(case\\)"], debug: false })
+  var g = new glob.Glob(dir + "*", {ignore: [dir + "!\\(case\\)"], debug: debugEC })
   g.on("end", function(r) {
     g.debug("found these files:", {r})
-    // TODO: WRONG ANSWER! Glob nukes the escapes in the ignore paths via windows transforms \\ --> / 
-    t.equal(r.length, 4)
-    t.equal(path.basename(r[0]), "!(case)")
-    t.equal(path.basename(r[1]), "!case")
-    t.equal(path.basename(r[2]), "(case)")
-    t.equal(path.basename(r[3]), "case")
+    // TODO: WRONG ANSWER! 
+    t.equal(r.length, 3)
+    t.equal(path.basename(r[0]), "!case")
+    t.equal(path.basename(r[1]), "(case)")
+    t.equal(path.basename(r[2]), "case")
     t.end()
   })
 })
 
 test("should ignore pattern that is a double-negative extglob B", function(t) {
-  var g = new glob.Glob(dir + "*", {ignore: [dir + "!(case)"], debug: false })
+  var g = new glob.Glob(dir + "*", {ignore: [dir + "!(case)"], debug: debugEC })
   g.on("end", function(r) {
     g.debug("found these files:", {r})
-    t.equal(r.length, 4)
-    t.equal(path.basename(r[0]), "!(case)")
-    t.equal(path.basename(r[1]), "!case")
-    t.equal(path.basename(r[2]), "(case)")
-    t.equal(path.basename(r[3]), "case")
+    t.equal(r.length, 1)
+    t.equal(path.basename(r[0]), "case")
     t.end()
   })
 })
