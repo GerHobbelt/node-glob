@@ -66,6 +66,7 @@ test('sync test', function (t) {
 
       opts.forEach(function (opt) {
         var res = glob.sync(pattern, opt)
+        console.error('glob.sync:', { pattern, res, opt })
         t.notEqual(res.indexOf(link), -1, 'opt=' + JSON.stringify(opt))
       })
     })

@@ -9,7 +9,7 @@ glob.GlobSync.prototype._process = glob.Glob.prototype._process = function () {
 
 test("create glob object without processing", function (t) {
   t.ok(glob('a', {noprocess:true}) instanceof glob.Glob)
-  t.ok(glob.GlobSync('a', {noprocess:true}) instanceof glob.GlobSync)
+  t.ok(glob.GlobSync('a', {noprocess:true}) instanceof glob.Glob)
   t.end()
 })
 
@@ -22,7 +22,7 @@ test("non-string pattern is evil magic", function (t) {
 })
 
 test("detect magic in glob patterns", function (t) {
-  t.notOk(glob.hasMagic(""), "no magic in ''")
+  t.throws('must provide pattern', function () { glob.hasMagic("") }, "no magic in ''")
   t.notOk(glob.hasMagic("a/b/c/"), "no magic in a/b/c/")
   t.ok(glob.hasMagic("a/b/**/"), "magic in a/b/**/")
   t.ok(glob.hasMagic("a/b/?/"), "magic in a/b/?/")
@@ -33,7 +33,7 @@ test("detect magic in glob patterns", function (t) {
   t.end()
 })
 
-test("ensure empty pattern does not throw error", function (t) {
-  t.notOk(glob.hasMagic(""), "no magic ''")
+test("ensure empty pattern throws error", function (t) {
+  t.throws('must provide pattern', function () { glob.hasMagic("") }, "no magic in ''")
   t.end()
 })
