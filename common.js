@@ -60,14 +60,15 @@ function setupIgnores (self, options) {
   var absolutePattern = path.isAbsolute(self.pattern);
   self.ignore = options.ignore || []
 
-  if (!Array.isArray(self.ignore))
+  if (!Array.isArray(self.ignore)) {
     self.ignore = [self.ignore]
+  }
 
   if (self.ignore.length) {
     self.debug('ignore list before mapping:', { ignoreList: self.ignore, absolutePattern })
     self.ignore = self.ignore.map(function (ignorePattern) {
       if (absolutePattern) {
-        ignorePattern = makeAbs(self, ignorePattern, true)
+        ignorePattern = makeAbs(self, ignorePattern)
       }
 
       return ignoreMap(self, ignorePattern)
@@ -159,11 +160,12 @@ function setopts (self, pattern, options) {
 
   self.changedCwd = false
   var cwd = pathToUnix(process.cwd())
-  if (!ownProp(options, "cwd"))
+  if (!ownProp(options, "cwd")) {
     self.cwd = cwd
+  }
   else {
     self.cwd = pathToUnix(path.resolve(options.cwd))
-    self.changedCwd = self.cwd !== cwd
+    self.changedCwd = (self.cwd !== cwd)
   }
 
   self.root = options.root
@@ -183,7 +185,6 @@ function setopts (self, pattern, options) {
   // TODO: is an absolute `cwd` supposed to be resolved against `root`?
   // e.g. { cwd: '/test', root: __dirname } === path.join(__dirname, '/test')
   self.cwdAbs = path.isAbsolute(self.cwd) ? self.cwd : makeAbs(self, self.cwd)
-  self.cwdAbs = pathToUnix(self.cwdAbs)
   self.nomount = !!options.nomount
 
   // disable comments and negation in Minimatch.
@@ -270,7 +271,7 @@ function mark (self, p) {
   var c = self.cache[abs]
   var m = p
   if (c) {
-    var isDir = c === 'DIR' || Array.isArray(c)
+    var isDir = (c === 'DIR' || Array.isArray(c))
     var slash = p.slice(-1) === '/'
 
     if (isDir && !slash)
@@ -289,28 +290,32 @@ function mark (self, p) {
 }
 
 // lotta situps...
-function makeAbs (self, f, doNotCvt2Unix) {
+function makeAbs (self, f) {
   var abs
   
   if (f.charAt(0) === '/') {
-    abs = path.join(self.root, f)
+    //abs = pathJoin(self.root, f)
+    let root = self.root
+    if (root.slice(-1) === '/') {
+      abs = root + f.slice(1)
+    } else {
+      abs = root + f
+    }
     self.debug('makeAbs ROOTED:', { before: f, root: self.root, after: abs })
   } else if (isWinDrive(f)) {
     abs = f + '/'                               // e.g. "C:/"
+    self.debug('makeAbs WINDRIVE -->', { inputPath: f, returnPath: abs })
   } else if (path.isAbsolute(f) || f === '') {
     abs = f
+    self.debug('makeAbs IS ABSOLUTE -->', { inputPath: f, returnPath: abs })
   } else if (self.changedCwd) {
-    abs = path.resolve(self.cwd, f)
+    abs = pathToUnix(path.resolve(self.cwd, f))
     self.debug('makeAbs changedCWD:', { before: f, cwd: self.cwd, after: abs })
   } else {
-    abs = path.resolve(f)
+    abs = pathToUnix(path.resolve(f))
     self.debug('makeAbs MISC:', { before: f, after: abs })
   }
 
-  if (!doNotCvt2Unix) {
-    abs = pathToUnix(abs);
-  }
-  self.debug('makeAbs -->', { inputPath: f, returnPath: abs })
   return abs
 }
 
