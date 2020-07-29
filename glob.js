@@ -111,21 +111,8 @@ glob.GlobSync = globSync.GlobSync = GlobSync
 // old api surface
 glob.glob = glob
 
-function extend (origin, add) {
-  if (add === null || typeof add !== 'object') {
-    return origin
-  }
-
-  var keys = Object.keys(add)
-  var i = keys.length
-  while (i--) {
-    origin[keys[i]] = add[keys[i]]
-  }
-  return origin
-}
-
 glob.hasMagic = function (pattern, options_) {
-  var options = extend({}, options_)
+  var options = Object.assign({}, options_)
   options.noprocess = true
 
   var g = new Glob(pattern, options)
@@ -281,6 +268,8 @@ Glob.prototype._realpathSet = function (index, cb) {
     // resolved.  just return the abs value in that case.
     p = self._makeAbs(p)
     self.fs_realpath(p, function (er, real) {
+      real = pathToUnix(real)
+      this.debug('fs_realpath CB', { er, p, real })
       if (!er)
         set[real] = true
       else if (er.syscall === 'stat')
@@ -523,13 +512,15 @@ Glob.prototype._emitMatch = function (index, e) {
     e = abs
   }
 
-  if (this.matches[index][e])
+  if (this.matches[index][e]) {
     return
+  }
 
   if (this.nodir) {
     var c = this.cache[abs]
-    if (c === 'DIR' || Array.isArray(c))
+    if (c === 'DIR' || Array.isArray(c)) {
       return
+    }
   }
 
   this.matches[index][e] = true
@@ -574,8 +565,9 @@ Glob.prototype._readdirInGlobStar = function (abs, cb) {
     if (!isSym && lstat && !lstat.isDirectory()) {
       self.cache[abs] = 'FILE'
       cb()
-    } else
+    } else {
       self._readdir(abs, false, cb)
+    }
   }
 }
 
@@ -583,21 +575,24 @@ Glob.prototype._readdir = function (abs, inGlobStar, cb) {
   if (this.aborted)
     return
 
-  cb = this.inflight('readdir\0'+abs+'\0'+inGlobStar, cb)
+  //cb = this.inflight('readdir\0'+abs+'\0'+inGlobStar, cb)
   this.debug('readdir', { abs, inGlobStar, inflight: !cb })
   if (!cb)
     return
 
-  if (inGlobStar && !ownProp(this.symlinks, abs))
+  if (inGlobStar && !ownProp(this.symlinks, abs)) {
     return this._readdirInGlobStar(abs, cb)
+  }
 
   if (ownProp(this.cache, abs)) {
     var c = this.cache[abs]
     if (!c || c === 'FILE')
       return cb()
 
-    if (Array.isArray(c))
+    // have we collected the directory child entries already? If yes, then be done
+    if (Array.isArray(c)) {
       return cb(null, c)
+    }
   }
 
   this.fs_readdir(abs, readdirCb(this, abs, cb))
@@ -616,6 +611,9 @@ Glob.prototype._readdirEntries = function (abs, entries, cb) {
   if (this.aborted)
     return
 
+  this.debug('_readdirEntries RAW:', { abs, entries, cache: this.cache })
+  entries = entries.map((p) => pathToUnix(p))
+
   // if we haven't asked to stat everything, then just
   // assume that everything in there exists, so we can avoid
   // having to stat it a second time.
@@ -631,6 +629,7 @@ Glob.prototype._readdirEntries = function (abs, entries, cb) {
   }
 
   this.cache[abs] = entries
+  this.debug('_readdirEntries POST:', { abs, entries, cache: this.cache })
   return cb(null, entries)
 }
 
@@ -779,15 +778,18 @@ Glob.prototype._stat = function (f, cb) {
   if (!this.stat && ownProp(this.cache, abs)) {
     var c = this.cache[abs]
 
-    if (Array.isArray(c))
+    if (Array.isArray(c)) {
       c = 'DIR'
+    }
 
     // It exists, but maybe not how we need it
-    if (!needDir || c === 'DIR')
-      return cb(null, c)
+    if (!needDir || c === 'DIR') {
+      return cb(null, !!c)
+    }
 
-    if (needDir && c === 'FILE')
+    if (needDir && c === 'FILE') {
       return cb()
+    }
 
     // otherwise we have to stat, because maybe c=true
     // if we know it exists, but not what it is.
@@ -795,20 +797,23 @@ Glob.prototype._stat = function (f, cb) {
 
   var stat = this.statCache[abs]
   if (stat !== undefined) {
-    if (stat === false)
-      return cb(null, stat)
+    if (stat === false) {
+      return cb(null, false)
+    }
     else {
       var type = stat.isDirectory() ? 'DIR' : 'FILE'
-      if (needDir && type === 'FILE')
+      if (needDir && type === 'FILE') {
         return cb()
-      else
-        return cb(null, type, stat)
+      }
+      else {
+        return cb(null, true)
+      }
     }
   }
 
   var self = this
   var statcb = this.inflight('stat\0' + abs, lstatcb_)
-  this.debug('stat:', { abs, inglight: !!statcb })
+  this.debug('stat:', { abs, inflight: !!statcb })
   if (statcb) {
     this.fs_lstat(abs, statcb)
   }
@@ -837,11 +842,12 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
     return cb()
   }
 
-  var needDir = f.slice(-1) === '/'
+  var needDir = (f.slice(-1) === '/')
   this.statCache[abs] = stat
 
-  if (abs.slice(-1) === '/' && stat && !stat.isDirectory())
-    return cb(null, false, stat)
+  if (abs.slice(-1) === '/' && stat && !stat.isDirectory()) {
+    return cb(null, false)
+  }
 
   var c = true
   if (stat) {
@@ -854,7 +860,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
     return cb()
   }
 
-  return cb(null, c, stat)
+  return cb(null, true)
 }
 
 Glob.prototype.fs_realpath = function (p, cb) {
