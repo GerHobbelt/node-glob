@@ -60,6 +60,7 @@ npm i @gerhobbelt/glob
 
 ```javascript
 var glob = require("@gerhobbelt/glob")
+var globAsync = require("@gerhobbelt/glob/async");
 
 // options is optional
 glob("**/*.js", options, function (er, files) {
@@ -68,6 +69,11 @@ glob("**/*.js", options, function (er, files) {
   // was found, then files is ["**/*.js"]
   // er is an error object or null.
 })
+
+async function work() {
+  const results = await globAsync('src/**/*.js');
+  // do magic
+}
 ```
 
 ## Glob Primer
