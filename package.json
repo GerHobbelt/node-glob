@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@gerhobbelt/gitignore-parser": "0.2.0-8",
-    "@gerhobbelt/minimatch": "3.0.4-4",
+    "@gerhobbelt/minimatch": "3.0.4-5",
     "inflight": "^1.0.6"
   },
   "devDependencies": {
@@ -22,6 +22,7 @@
     "tick": "0.1.1"
   },
   "scripts": {
+    "build": "npm test",
     "profclean": "rm -f v8.log profile.txt",
     "test": "tap test/*.js --cov --before=test/00-setup.js --after=test/zz-cleanup.js",
     "test-regen": "npm run profclean && TEST_REGEN=1 node test/00-setup.js",
