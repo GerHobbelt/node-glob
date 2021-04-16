@@ -319,16 +319,16 @@ the filesystem.
   In the case of a symlink that cannot be resolved, the full absolute
   path to the matched entry is returned (though it will usually be a
   broken symlink)
+* `realpathCache` A cache of realpath mappings, to prevent
+  unnecessary `realpath` calls.  While it should not normally be necessary
+  to set this, you may pass the realpathCache from one glob() call to the
+  options object of another, if you know that the filesystem will not
+  change between calls.  (See "Race Conditions" below.)
 * `absolute` Set to true to always receive absolute paths for matched
   files.  Unlike `realpath`, this also affects the values returned in
   the `match` event.
-
-const globDefaultOptions = {
-  realpathCache: {},
-  noprocess: false,
-  maxLength: Infinity,
-};
-
+* `noprocess` TBD
+* `maxLength` TBD
 
 ## Comparisons to other fnmatch/glob implementations
 
