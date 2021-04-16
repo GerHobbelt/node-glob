@@ -268,8 +268,10 @@ Glob.prototype._realpathSet = function (index, cb) {
     // resolved.  just return the abs value in that case.
     p = self._makeAbs(p)
     self.fs_realpath(p, function (er, real) {
-      real = pathToUnix(real)
-      this.debug('fs_realpath CB', { er, p, real })
+      if (!er) {
+        real = pathToUnix(real)
+      }
+      self.debug('fs_realpath CB', { er, p, real })
       if (!er)
         set[real] = true
       else if (er.syscall === 'stat')
