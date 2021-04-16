@@ -160,7 +160,7 @@ function setopts (self, pattern, options) {
 
   self.changedCwd = false
   var cwd = pathToUnix(process.cwd())
-  if (!ownProp(options, "cwd")) {
+  if (options.cwd != null) {
     self.cwd = cwd
   }
   else {
