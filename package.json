@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@gerhobbelt/gitignore-parser": "0.2.0-9",
-    "@gerhobbelt/minimatch": "3.0.4-5",
+    "@gerhobbelt/minimatch": "3.0.4-6",
     "inflight": "^1.0.6"
   },
   "devDependencies": {

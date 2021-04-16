@@ -277,7 +277,7 @@ the filesystem.
   `silent` option to true to suppress these warnings.
 * `strict` When an unusual error is encountered when attempting to
   read a directory, an error will be raised. Set the `strict` option
-  to false continue the search for other matches in these cases.
+  to false to continue the search for other matches in these cases.
   Defaults to true.
 * `cache` See `cache` property above.  Pass in a previously generated
   cache object to save some fs calls.
@@ -297,10 +297,10 @@ the filesystem.
 * `nonull` Set to never return an empty set, instead of returning a set
   containing the pattern itself.  This is the default in glob(3).
 * `debug` Set to enable debug logging in minimatch and glob.
-* `nobrace` Do not expand `{a,b}` and `{1..3}` brace sets.
-* `noglobstar` Do not match `**` against multiple filenames.  (Ie,
+* `nobrace` (Minimatch option:) Do not expand `{a,b}` and `{1..3}` brace sets.
+* `noglobstar` (Minimatch option:) Do not match `**` against multiple filenames.  (Ie,
   treat it as a normal `*` instead.)
-* `noext` Do not match `+(a|b)` "extglob" patterns.
+* `noext` (Minimatch option:) Do not match `+(a|b)` "extglob" patterns.
 * `nocase` Perform a case-insensitive match.  Note: on
   case-insensitive filesystems, non-magic patterns will match by
   default, since `stat` and `readdir` will not raise errors.
@@ -322,6 +322,13 @@ the filesystem.
 * `absolute` Set to true to always receive absolute paths for matched
   files.  Unlike `realpath`, this also affects the values returned in
   the `match` event.
+
+const globDefaultOptions = {
+  realpathCache: {},
+  noprocess: false,
+  maxLength: Infinity,
+};
+
 
 ## Comparisons to other fnmatch/glob implementations
 
