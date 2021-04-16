@@ -9,7 +9,7 @@
     "node": ">=8"
   },
   "dependencies": {
-    "@gerhobbelt/gitignore-parser": "0.2.0-8",
+    "@gerhobbelt/gitignore-parser": "0.2.0-9",
     "@gerhobbelt/minimatch": "3.0.4-5",
     "inflight": "^1.0.6"
   },
@@ -18,7 +18,7 @@
     "ignore": "5.1.8",
     "mkdirp": "1.0.4",
     "rimraf": "3.0.2",
-    "tap": "14.10.8",
+    "tap": "15.0.2",
     "tick": "0.1.1"
   },
   "scripts": {
