@@ -67,7 +67,7 @@ function setupIgnores (self, options) {
   if (self.ignore.length) {
     self.debug('ignore list before mapping:', { ignoreList: self.ignore, absolutePattern })
     self.ignore = self.ignore.map(function (ignorePattern) {
-      if (absolutePattern) {
+      if (absolutePattern && typeof ignorePattern !== 'function') {
         ignorePattern = makeAbs(self, ignorePattern)
       }
 
