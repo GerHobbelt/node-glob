@@ -2,7 +2,7 @@
   "name": "@gerhobbelt/glob",
   "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
   "description": "a little globber",
-  "version": "7.1.7-10",
+  "version": "7.1.7-11",
   "repository": "GerHobbelt/node-glob",
   "main": "glob.js",
   "engines": {
